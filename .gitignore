@@ -210,3 +210,4 @@ __marimo__/
 *.npy
 /DataProcess/myenv
 /DATA/extracted
+backend/vectordb/mobileclip_s0.pt

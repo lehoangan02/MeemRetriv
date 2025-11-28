@@ -1,0 +1,1 @@
+curl -L -o mobileclip_s0.pt https://huggingface.co/apple/MobileCLIP-S0/resolve/main/mobileclip_s0.pt
