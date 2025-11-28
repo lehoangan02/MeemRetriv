@@ -1,0 +1,104 @@
+:root {
+  --primary: #FFCF00; /* Lego Yellow */
+  --accent: #E3000B;  /* Lego Red */
+  --dark: #24292e;
+  --light: #f4f4f9;
+}
+
+body {
+  background-color: var(--light);
+  font-family: 'Inter', sans-serif;
+  margin: 0;
+}
+
+.app-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.header h1 { font-size: 2.5rem; margin: 10px 0; color: var(--dark); }
+.header p { color: #666; margin-bottom: 40px; }
+.logo { font-size: 4rem; }
+
+/* Upload Area */
+.upload-card {
+  background: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  max-width: 500px;
+  margin: 0 auto 50px auto;
+}
+
+.upload-label {
+  display: block;
+  border: 3px dashed #ddd;
+  border-radius: 12px;
+  cursor: pointer;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+
+.upload-label:hover { border-color: var(--primary); background: #fffdf0; }
+
+.preview-img { width: 100%; height: 100%; object-fit: cover; }
+.placeholder { font-size: 1.2rem; color: #aaa; }
+.placeholder span { font-size: 3rem; display: block; margin-bottom: 10px; }
+
+.search-btn {
+  background: var(--accent);
+  color: white;
+  border: none;
+  width: 100%;
+  padding: 15px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 8px;
+  margin-top: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.search-btn:hover { background: #c20009; }
+.search-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+/* Results */
+.results-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 25px;
+}
+
+.result-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  position: relative;
+  transition: transform 0.2s;
+}
+
+.result-card:hover { transform: translateY(-5px); }
+
+.certainty-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0, 255, 128, 0.9);
+  color: #005a2b;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.result-card img { width: 100%; height: 180px; object-fit: contain; padding: 10px; background: #fff; }
+.info { padding: 15px; text-align: left; background: #fcfcfc; border-top: 1px solid #eee; }
+.info h3 { margin: 0; font-size: 1.1rem; }
+.info p { margin: 5px 0; color: #777; font-size: 0.9rem; }
