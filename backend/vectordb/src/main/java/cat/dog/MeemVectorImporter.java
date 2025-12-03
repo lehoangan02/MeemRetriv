@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class LegoVectorImporter {
+public class MeemVectorImporter {
 
     // Configuration
     private static final String WEAVIATE_URL = "http://127.0.0.1:8080/v1/objects";

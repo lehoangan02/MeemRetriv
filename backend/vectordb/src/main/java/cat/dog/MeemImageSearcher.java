@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
 import java.util.Map;
 
-public class LegoImageSearcher {
+public class MeemImageSearcher {
     
     private static final String WEVIATE_URL = "http://127.0.0.1:8080/v1/graphql";
     private static final String VENV_DIR_NAME = ".venv";
