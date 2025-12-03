@@ -1,4 +1,4 @@
-package cat.dog;
+package cat.dog.repository;
 
 import java.net.URI;
 import java.net.http.HttpClient;

@@ -1,4 +1,4 @@
-package cat.dog;
+package cat.dog.repository;
 
 import java.io.BufferedReader;
 import java.io.File;
