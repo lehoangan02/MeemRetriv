@@ -15,12 +15,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-public class MeemVectorImporter {
+public class MemeVectorImporter {
 
     // Configuration
     private static final String WEAVIATE_URL = "http://127.0.0.1:8080/v1/objects";
-    private static final String EMBEDDINGS_DIR = "./../../DATA/embeddings"; 
-    private static final String CLASS_NAME = "LegoPiece";
+    private static final String EMBEDDINGS_DIR = "./../../DATA/embeddings/"; 
+    private static final String CLASS_NAME = "MemeImage";
     
     // Virtual Environment Configuration
     private static final String VENV_DIR_NAME = ".venv";

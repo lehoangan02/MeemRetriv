@@ -49,7 +49,7 @@ curl -s -X POST "http://127.0.0.1:8080/v1/objects" \
   -H "Content-Type: application/json" \
   -d "{
     \"id\": \"$UUID\",
-    \"class\": \"LegoPiece\",
+    \"class\": \"MemeImage\",
     \"vector\": $VECTOR_JSON,
     \"properties\": {
         \"name\": \"$VECTOR_FILE\"

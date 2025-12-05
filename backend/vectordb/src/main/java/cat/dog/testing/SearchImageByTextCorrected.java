@@ -2,8 +2,8 @@ package cat.dog.testing;
 
 import java.util.List;
 
-import cat.dog.model.LabelDbManager;
 import cat.dog.dto.LabelRecord;
+import cat.dog.repository.LabelDbManager;
 
 public class SearchImageByTextCorrected {
     public static void main(String[] args) {

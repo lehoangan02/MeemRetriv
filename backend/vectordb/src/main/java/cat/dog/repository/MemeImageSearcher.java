@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
 import java.util.Map;
 
-public class MeemImageSearcher {
+public class MemeImageSearcher {
     
     private static final String WEVIATE_URL = "http://127.0.0.1:8080/v1/graphql";
     private static final String VENV_DIR_NAME = ".venv";
@@ -30,8 +30,7 @@ public class MeemImageSearcher {
     }
 
     public static void main(String[] args) {
-        // example image: LEGO_brick.jpg
-        String queryImagePath = "./LEGO_brick.png";
+        String queryImagePath = "./meme_minion.jpg";
 
         searchByImage(queryImagePath, null);
     }
@@ -101,7 +100,7 @@ public class MeemImageSearcher {
         }
         
         return String.format(
-            "{ \"query\": \"{ Get { LegoPiece(nearVector: {vector: %s} limit: 3 %s) { name _additional { distance } } } }\" }",
+            "{ \"query\": \"{ Get { MemeImage(nearVector: {vector: %s} limit: 3 %s) { name _additional { distance } } } }\" }",
             vectorJson,
             filterString
         );

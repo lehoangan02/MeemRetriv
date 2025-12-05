@@ -1,1 +1,1 @@
-curl -X DELETE "http://127.0.0.1:8080/v1/schema/classes/LegoPiece"
+curl -X DELETE "http://127.0.0.1:8080/v1/schema/LegoPiece"

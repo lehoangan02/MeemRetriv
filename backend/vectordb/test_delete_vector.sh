@@ -8,7 +8,7 @@ curl -s -X DELETE "http://127.0.0.1:8080/v1/batch/objects" \
   -H "Content-Type: application/json" \
   -d "{
     \"match\": {
-      \"class\": \"LegoPiece\",
+      \"class\": \"MemeImage\",
       \"where\": {
         \"path\": [\"name\"],
         \"operator\": \"Equal\",

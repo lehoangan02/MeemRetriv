@@ -1,7 +1,7 @@
 package cat.dog.testing;
 
-import cat.dog.model.LabelDbManager;
 import cat.dog.dto.LabelRecord;
+import cat.dog.repository.LabelDbManager;
 
 public class SearchImageByName {
     public static void main(String[] args) {

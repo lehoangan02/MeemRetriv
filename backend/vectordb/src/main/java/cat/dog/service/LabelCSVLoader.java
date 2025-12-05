@@ -2,7 +2,8 @@ package cat.dog.service;
 
 import cat.dog.dto.LabelRecord;
 import cat.dog.model.Sentiment;
-import cat.dog.model.LabelDbManager;
+import cat.dog.repository.LabelDbManager;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 

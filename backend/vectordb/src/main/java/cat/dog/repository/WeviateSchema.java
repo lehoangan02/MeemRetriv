@@ -21,16 +21,16 @@ public class WeviateSchema {
         System.out.println("Schema GET response:");
         System.out.println(getResponse.body());
 
-        boolean classExists = getResponse.body().contains("\"class\":\"LegoPiece\"");
+        boolean classExists = getResponse.body().contains("\"class\":\"MemeImage\"");
 
         if (classExists) {
-            System.out.println("Class 'LegoPiece' already exists. Skipping creation.");
+            System.out.println("Class 'MemeImage' already exists. Skipping creation.");
             return;
         }
         String schemaJson = """
         {
-          "class": "LegoPiece",
-          "description": "A LEGO piece with precomputed vector",
+          "class": "MemeImage",
+          "description": "A meme image's precomputed CLIP vector",
           "vectorizer": "none",
           "properties": [
             {"name": "name", "dataType": ["string"]},
