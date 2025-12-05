@@ -98,21 +98,37 @@ public class LabelDbManager {
     }
     public List<LabelRecord> searchByText(String userQuery) {
         List<LabelRecord> results = new ArrayList<>();
+
+        if (userQuery == null || userQuery.trim().isEmpty()) {
+            return results;
+        }
+
+        // --- NEW SANITIZATION STEP ---
+        // 1. Remove anything that is NOT a letter (a-z), number (0-9), or space.
+        //    The ^ inside [] means "Not". So [^a-zA-Z0-9\\s] means "Not alphanumeric or space".
+        String cleanQuery = userQuery.replaceAll("[^a-zA-Z0-9\\s]", "");
         
-        // SQL Breakdown:
-        // 1. to_tsvector: Converts your column into searchable tokens (lexemes).
-        // 2. plainto_tsquery: Converts user input "cat dog" into a query "cat & dog".
-        // 3. @@: The "Match" operator.
-        String sql = "SELECT * FROM label WHERE to_tsvector('english', text_corrected) @@ plainto_tsquery('english', ?)";
+        // 2. NOW add the OR pipes to the clean text
+        //    Input: "Old times! bigbangtheory"
+        //    Clean: "Old times bigbangtheory"
+        //    Final: "Old | times | bigbangtheory"
+        String formattedQuery = cleanQuery.trim().replaceAll("\\s+", " | ");
+
+        // Check if the query became empty after cleaning (e.g. user entered "!!!")
+        if (formattedQuery.isEmpty()) {
+            return results;
+        }
+
+        // 3. The SQL remains the same
+        String sql = "SELECT * FROM label WHERE to_tsvector('english', text_corrected) @@ to_tsquery('english', ?)";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, userQuery);
+            pstmt.setString(1, formattedQuery);
 
             try (ResultSet rs = pstmt.executeQuery()) {
                 while (rs.next()) {
-                    // Map row to object
                     int number = rs.getInt("number");
                     String name = rs.getString("image_name");
                     String ocr = rs.getString("text_ocr");
@@ -124,7 +140,6 @@ public class LabelDbManager {
                         sentiment = Sentiment.valueOf(sentimentStr);
                     }
 
-                    // Add to list
                     results.add(new LabelRecord(number, name, ocr, corrected, sentiment));
                 }
             }

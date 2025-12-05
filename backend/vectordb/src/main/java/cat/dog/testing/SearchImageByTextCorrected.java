@@ -15,6 +15,7 @@ public class SearchImageByTextCorrected {
         List<LabelRecord> records = dbManager.searchByText("Old times! bigbangtheory");
         if (!records.isEmpty()) {
             System.out.println("Records found:\n");
+            System.out.println("Total records found: " + records.size());
             for (LabelRecord record : records) {
                 System.out.println("Number: " + record.getNumber());
                 System.out.println("Image Name: " + record.getImageName());
