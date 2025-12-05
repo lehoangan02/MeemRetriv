@@ -33,8 +33,7 @@ public class WeviateSchema {
           "description": "A meme image's precomputed CLIP vector",
           "vectorizer": "none",
           "properties": [
-            {"name": "name", "dataType": ["string"]},
-            {"name": "vector", "dataType": ["number[]"]}
+            {"name": "name", "dataType": ["string"]}
           ]
         }
         """;
