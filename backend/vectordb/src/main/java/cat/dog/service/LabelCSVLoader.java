@@ -23,6 +23,7 @@ public class LabelCSVLoader {
                 .setSkipHeaderRecord(true)
                 .setIgnoreHeaderCase(true)
                 .setTrim(true)
+                .setAllowMissingColumnNames(true)
                 .build();
         int count = 0;
         try (Reader in = new FileReader(filePath)) {

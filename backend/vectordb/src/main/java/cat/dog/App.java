@@ -37,7 +37,7 @@ public class App implements CommandLineRunner
             LabelCSVLoader importer = new LabelCSVLoader(dbManager);
             
             // Make sure this path is correct on your machine!
-            importer.importCSV("./../../DATA/archive/label.csv"); 
+            importer.importCSV("./../../DATA/archive/labels.csv"); 
         }
     }
 }

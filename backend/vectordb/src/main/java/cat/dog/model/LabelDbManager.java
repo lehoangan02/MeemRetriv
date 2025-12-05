@@ -34,6 +34,7 @@ public class LabelDbManager {
             } else {
                 pstmnt.setNull(5, Types.VARCHAR);
             }
+            pstmnt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error saving to DB: " + e.getMessage());
             e.printStackTrace();
