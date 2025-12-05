@@ -28,8 +28,8 @@ def get_device(device_arg):
     if torch.cuda.is_available():
         return "cuda"
     # Check for Apple Silicon (MPS) acceleration
-    # elif torch.backends.mps.is_available():
-    #     return "mps"
+    elif torch.backends.mps.is_available():
+        return "mps"
     else:
         return "cpu"
 

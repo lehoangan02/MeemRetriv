@@ -48,7 +48,7 @@ public class ClipEmbedder {
     /**
      * Overload for text embedding without saving to file.
      */
-    public String embedText(String textQuery) {
+    public static String embedText(String textQuery) {
         return embedText(textQuery, null);
     }
 
@@ -58,7 +58,7 @@ public class ClipEmbedder {
      * @param saveNpyPath Optional path to save the vector as a .npy file (can be null).
      * @return JSON string representation of the vector.
      */
-    public String embedText(String textQuery, String saveNpyPath) {
+    public static String embedText(String textQuery, String saveNpyPath) {
         String safeText = textQuery.replace("'", "\\'");
         
         // Resolve Checkpoint Path
@@ -103,7 +103,7 @@ public class ClipEmbedder {
     /**
      * Overload for image embedding without saving to file.
      */
-    public String embedImage(String imagePath) {
+    public static String embedImage(String imagePath) {
         return embedImage(imagePath, null);
     }
 
@@ -113,7 +113,7 @@ public class ClipEmbedder {
      * @param saveNpyPath Optional path to save the vector as a .npy file (can be null).
      * @return JSON string representation of the vector.
      */
-    public String embedImage(String imagePath, String saveNpyPath) {
+    public static String embedImage(String imagePath, String saveNpyPath) {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             System.err.println("ClipEmbedder Error: Image file does not exist at " + imagePath);
@@ -162,7 +162,7 @@ public class ClipEmbedder {
         return executePython(pythonScript);
     }
 
-    private String executePython(String script) {
+    private static String executePython(String script) {
         try {
             ProcessBuilder pb = new ProcessBuilder(PYTHON_EXEC, "-c", script);
             pb.redirectErrorStream(true); // Merge stderr into stdout
