@@ -101,6 +101,8 @@ def main():
             # Generate embedding
             with torch.no_grad():
                 features = model.encode_image(image_tensor)
+
+                features /= features.norm(dim=-1, keepdim=True)
             
             # Convert to numpy
             features_np = features.cpu().numpy().astype(np.float32)

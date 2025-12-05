@@ -30,9 +30,67 @@ public class MemeImageSearcher {
     }
 
     public static void main(String[] args) {
-        String queryImagePath = "./meme_minion.jpg";
+        String queryImagePath = "./image_3889.jpg";
 
         searchByImage(queryImagePath, null);
+        // String textQuery = "A funny minion meme";
+        // searchByText(textQuery, null);
+    }
+    private static void searchByText(String textQuery, Map<String, String> filters) {
+        String vectorString = getVectorMobileClipFromText(textQuery);
+
+        if (vectorString == null) {
+            System.err.println("Failed to generate vector.");
+            return;
+        }
+
+        String graphqlQuery = buildWeivateQuery(vectorString, filters);
+
+        executeSearch(graphqlQuery);
+    }
+
+    private static String getVectorMobileClipFromText(String textQuery) {
+        // Escape single quotes to prevent breaking the Python string definition
+        String safeText = textQuery.replace("'", "\\'"); 
+        
+        String pythonScript = 
+            "import torch, mobileclip, json\n" +
+            // We don't need PIL or numpy for text
+            "try:\n" +
+            // 1. Load model (same as before)
+            "    model, _, _ = mobileclip.create_model_and_transforms('mobileclip_s0', pretrained='mobileclip_s0.pt')\n" +
+            // 2. Load the Tokenizer (Specific to MobileCLIP)
+            "    tokenizer = mobileclip.get_tokenizer('mobileclip_s0')\n" +
+            // 3. Tokenize the text
+            "    text_tensor = tokenizer(['" + safeText + "'])\n" +
+            "    with torch.no_grad():\n" +
+            // 4. Encode TEXT instead of IMAGE
+            "        features = model.encode_text(text_tensor)\n" +
+            // 5. Normalize (Critical for matching with image vectors)
+            "        features /= features.norm(dim=-1, keepdim=True)\n" +
+            "    print('VECTOR_START|' + json.dumps(features.cpu().numpy().flatten().tolist()))\n" +
+            "except Exception as e:\n" +
+            "    print(f'ERROR|{e}')";
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(PYTHON_EXEC, "-c", pythonScript);
+            pb.redirectErrorStream(true);
+            Process process = pb.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                // System.out.println("PYTHON DEBUG: " + line); 
+                if (line.startsWith("VECTOR_START|")) {
+                    return line.split("\\|")[1];
+                } else if (line.startsWith("ERROR|")) {
+                    System.err.println("Python Error in Text Encoding: " + line);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
     private static void searchByImage(String imagePath, Map<String, String> filters) {

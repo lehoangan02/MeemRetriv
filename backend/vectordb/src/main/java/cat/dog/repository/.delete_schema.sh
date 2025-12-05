@@ -1,1 +1,1 @@
-mvn clean compile && mvn exec:java -Dexec.mainClass="cat.dog.repository.DeleteSchema" -Dexec.args="LegoPiece"
+mvn clean compile && mvn exec:java -Dexec.mainClass="cat.dog.repository.DeleteSchema" -Dexec.args="MemeImage"
