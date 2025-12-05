@@ -5,5 +5,9 @@ public enum Sentiment {
     positive,
     neutral,
     negative,
-    very_negative
+    very_negative;
+
+    public String toDbValue() {
+        return this.name();
+    }
 }
