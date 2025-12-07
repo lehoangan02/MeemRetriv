@@ -32,7 +32,7 @@ public class MemeSearcher {
     }
 
     public static void main(String[] args) {
-        String queryImagePath = "./leo_dicapiro.jpg";
+        String queryImagePath = "./received_images/query_image.png";
 
         searchByImage(queryImagePath, null);
         // String textQuery = "A funny minion meme";
