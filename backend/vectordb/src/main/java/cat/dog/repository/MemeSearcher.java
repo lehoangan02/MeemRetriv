@@ -53,7 +53,7 @@ public class MemeSearcher {
 
         String graphqlQuery = buildWeivateQuery(vectorString, classString, filters);
 
-        return executeSearch(graphqlQuery);
+        return executeSearch(graphqlQuery, classString);
     }
 
     
@@ -74,7 +74,7 @@ public class MemeSearcher {
 
         String graphqlQuery = buildWeivateQuery(vectorString, classString, filters);
 
-       return executeSearch(graphqlQuery);
+       return executeSearch(graphqlQuery, classString);
     }
     
 
@@ -99,7 +99,7 @@ public class MemeSearcher {
         throw new UnsupportedOperationException("Unimplemented method 'buildFilters'");
     }
     
-    private static List<String> executeSearch(String jsonPayload) {
+    private static List<String> executeSearch(String jsonPayload, String classString) {
         final String WEVIATE_URL = DatabaseConfig.getInstance().getWeviateUrl() + "/graphql";
         List<String> imageNames = new ArrayList<>();
 
@@ -120,7 +120,7 @@ public class MemeSearcher {
                 JSONObject obj = new JSONObject(response.body());
                 JSONArray items = obj.getJSONObject("data")
                                     .getJSONObject("Get")
-                                    .getJSONArray("MemeImage");
+                                    .getJSONArray(classString);
 
                 for (int i = 0; i < items.length(); i++) {
                     String name = items.getJSONObject(i).getString("name");
