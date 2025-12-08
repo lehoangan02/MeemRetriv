@@ -1,3 +1,20 @@
+import os
+import multiprocessing
+
+# --- CRITICAL: These must be set BEFORE importing torch or transformers ---
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["USE_TF"] = "0"
+
+# Set start method before other imports, but wrapped in try/except 
+# to prevent errors if it was already set by another module
+try:
+    multiprocessing.set_start_method("spawn", force=True)
+except RuntimeError:
+    pass
+# --------------------------------------------------------------------------
+
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from ner import GLiNER_Person_Entity_Prediction
@@ -21,8 +38,13 @@ class MemeLLMProcessor:
         self.ner_model = GLiNER_Person_Entity_Prediction()
 
     def process_query(self, query):
+        # NOTE: Since we are running in the same process now, 
+        # ensure ner.py isn't trying to spawn new processes unnecessarily
         celebrities = self.ner_model.predict_person_entities(query, threshold=0.5)
-        celebrity_text = celebrities[0] if celebrities else "unknown"
+        if celebrities:
+            celebrities_text = ", ".join(celebrities)  # joins all names with comma
+        else:
+            celebrities_text = "unknown"
 
         # Extract caption if present in quotes
         import re
@@ -31,13 +53,13 @@ class MemeLLMProcessor:
 
         system_prompt = f"""
 You are a data processing assistant. 
-Generate JSON with keys: celebrity, caption, text. 
-- celebrity: use the detected celebrity if any
+Generate JSON with keys: celebrities, caption, text. 
+- celebrities: use the detected celebrities if any
 - caption: exact text in quotes from the input
-- text: rewrite the rest of the description generically (replace celebrity with 'a man'/'a woman', keep actions)
+- text: rewrite the rest of the description generically (replace celebrities with 'a man'/'a woman', keep actions)
 Return ONLY valid JSON.
 
-Detected celebrity: {celebrity_text}
+Detected celebrities: {celebrities_text}
 Caption: {caption_text}
 Input: {query}
 """
@@ -65,8 +87,11 @@ Input: {query}
 
 if __name__ == "__main__":
     processor = MemeLLMProcessor()
+    # query = """
+    # Meme about Leonardo DiCaprio holding a glass of wine and smirking. The caption reads: "When you realize you've been acting for over 20 years and still haven't won an Oscar."
+    # """
     query = """
-Meme about Leonardo DiCaprio holding a glass of wine and smirking. The caption reads: "When you realize you've been acting for over 20 years and still haven't won an Oscar."
-"""
+    Meme about Tom Hanks and Leonardo DiCaprio having a coffee together. The caption reads: "Actors just want to chill."
+    """
     result = processor.process_query(query)
     print(result)
