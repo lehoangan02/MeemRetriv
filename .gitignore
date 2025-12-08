@@ -210,8 +210,10 @@ __marimo__/
 *.npy
 /DataProcess/myenv
 /DATA/extracted
-backend/vectordb/mobileclip_s0.pt
+backend/vectordb/models/mobileclip_s0.pt
 /DATA/OLD_LEGO_DATA
 /DATA/archive
 /DATA/cleaned
 /DATA/extracted_faces
+*.pt
+*.onnx

@@ -9,7 +9,11 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import cat.dog.utility.ClipEmbedder;
 import cat.dog.utility.DatabaseConfig;
@@ -39,38 +43,38 @@ public class MemeSearcher {
         // String textQuery = "A funny minion meme";
         // searchByText(textQuery, classString, null);
     }
-    private static void searchByText(String textQuery, String classString, Map<String, String> filters) {
+    public static List<String> searchByText(String textQuery, String classString, Map<String, String> filters) {
         String vectorString = ClipEmbedder.embedText(textQuery);
 
         if (vectorString == null) {
             System.err.println("Failed to generate vector.");
-            return;
+            return new ArrayList<>();
         }
 
         String graphqlQuery = buildWeivateQuery(vectorString, classString, filters);
 
-        executeSearch(graphqlQuery);
+        return executeSearch(graphqlQuery);
     }
 
     
 
-    private static void searchByImage(String imagePath, String classString, Map<String, String> filters) {
+    public static List<String> searchByImage(String imagePath, String classString, Map<String, String> filters) {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             System.err.println("Error: Image file does not exist");
-            return;
+            return new ArrayList<>();
         }
 
         String vectorString = ClipEmbedder.embedImage(imagePath);
 
         if (vectorString == null) {
             System.err.println("Failed to generate vector.");
-            return;
+            return new ArrayList<>();
         }
 
         String graphqlQuery = buildWeivateQuery(vectorString, classString, filters);
 
-        executeSearch(graphqlQuery);
+       return executeSearch(graphqlQuery);
     }
     
 
@@ -95,28 +99,44 @@ public class MemeSearcher {
         throw new UnsupportedOperationException("Unimplemented method 'buildFilters'");
     }
     
-    private static void executeSearch(String jsonPayload) {
-
+    private static List<String> executeSearch(String jsonPayload) {
         final String WEVIATE_URL = DatabaseConfig.getInstance().getWeviateUrl() + "/graphql";
+        List<String> imageNames = new ArrayList<>();
 
         try {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(WEVIATE_URL))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
-                .build();
+                    .uri(URI.create(WEVIATE_URL))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            
+            String responseBody = response.body();
+            System.out.println(formatJson(responseBody));
+
             if (response.statusCode() == 200) {
-                // In a real app, use a JSON library (Jackson/Gson) to parse this.
-                // For learning, we just print the raw JSON response.
-                System.out.println(formatJson(response.body()));
+                JSONObject obj = new JSONObject(response.body());
+                JSONArray items = obj.getJSONObject("data")
+                                    .getJSONObject("Get")
+                                    .getJSONArray("MemeImage");
+
+                for (int i = 0; i < items.length(); i++) {
+                    String name = items.getJSONObject(i).getString("name");
+                    if (name.endsWith(".npy")) {
+                        name = name.substring(0, name.length() - 4); // remove .npy
+                    }
+                    imageNames.add(name);
+                }
             } else {
                 System.err.println("Error " + response.statusCode() + ": " + response.body());
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return imageNames;
     }
     private static String formatJson(String input) {
         return input.replaceAll(",", ",\n").replaceAll("\\{", "{\n").replaceAll("}", "\n}");

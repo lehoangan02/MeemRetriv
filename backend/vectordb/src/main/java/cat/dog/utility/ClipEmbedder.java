@@ -3,7 +3,6 @@ package cat.dog.utility;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
-import java.io.IOException;
 
 /**
  * Service responsible for generating MobileCLIP embeddings for images and text.
@@ -12,7 +11,7 @@ import java.io.IOException;
 public class ClipEmbedder {
 
     private static final String VENV_DIR_NAME = ".venv";
-    private static final String CHECKPOINT_FILE = "./mobileclip_s0.pt"; // Ensure this file exists in project root!
+    private static final String CHECKPOINT_FILE = "./models/mobileclip_s0.pt"; // Ensure this file exists in project root!
     private static final String PYTHON_EXEC;
 
     // Static block to determine OS-specific paths for Python inside venv
@@ -26,21 +25,20 @@ public class ClipEmbedder {
     }
 
     public static void main(String[] args) {
-        ClipEmbedder embedder = new ClipEmbedder();
 
         // 1. Text Embedding Example -> Saves .npy
         String textQuery = "A funny minion meme";
         String textNpy = "text_query_vector.npy";
         System.out.println("Embedding text: \"" + textQuery + "\" -> " + textNpy);
         
-        embedder.embedText(textQuery, textNpy);
+        ClipEmbedder.embedText(textQuery, textNpy);
 
         // 2. Image Embedding Example -> Saves .npy
         String imagePath = "./image_3889.jpg";
         String imageNpy = "image_3889_vector.npy";
         System.out.println("Embedding image: " + imagePath + " -> " + imageNpy);
         
-        embedder.embedImage(imagePath, imageNpy);
+        ClipEmbedder.embedImage(imagePath, imageNpy);
         
         System.out.println("Done. Generated .npy files for inspection.");
     }

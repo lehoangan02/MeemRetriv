@@ -38,7 +38,7 @@ def main():
     parser.add_argument("--input_dir", type=str, required=True, help="Directory containing input images")
     parser.add_argument("--output_dir", type=str, default=None, help="Directory to save .npy files (defaults to input_dir)")
     parser.add_argument("--model_name", type=str, default="mobileclip_s0", choices=["mobileclip_s0", "mobileclip_s1", "mobileclip_s2", "mobileclip_b"], help="MobileCLIP model variant")
-    parser.add_argument("--pretrained", type=str, default="./../backend/vectordb/mobileclip_s0.pt", help="Path to pretrained checkpoint (e.g., mobileclip_s0.pt). Optional if model auto-downloads.")
+    parser.add_argument("--pretrained", type=str, default="./../backend/vectordb/models/mobileclip_s0.pt", help="Path to pretrained checkpoint (e.g., mobileclip_s0.pt). Optional if model auto-downloads.")
     parser.add_argument("--device", type=str, default=None, help="Device to use (cuda, mps, cpu). Defaults to best available.")
     
     args = parser.parse_args()

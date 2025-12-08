@@ -1,7 +1,10 @@
 package cat.dog.controller;
 
 import cat.dog.dto.Base64Image;
+import cat.dog.service.QueryImageRetriever;
 import cat.dog.utility.Base64ToImageConverter;
+
+import javax.management.Query;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,8 @@ public class APIController {
     @PostMapping("/uploadImageBase64")
     public ResponseEntity<String> uploadImageBase64(@RequestBody Base64Image request) {
         boolean success = Base64ToImageConverter.saveBase64AsPng(request.getImageBase64());
+        QueryImageRetriever retriever = QueryImageRetriever.getInstance();
+        retriever.retrieveSimilarImages("./received_images/query_image.png", 5);
         if (success) {
             return ResponseEntity.ok("Image saved as received_images/query_image.png");
         } else {
