@@ -33,12 +33,13 @@ public class MemeSearcher {
 
     public static void main(String[] args) {
         String queryImagePath = "./received_images/query_image.png";
+        String classString = "MemeImage";
 
-        searchByImage(queryImagePath, null);
+        searchByImage(queryImagePath, classString, null);
         // String textQuery = "A funny minion meme";
-        // searchByText(textQuery, null);
+        // searchByText(textQuery, classString, null);
     }
-    private static void searchByText(String textQuery, Map<String, String> filters) {
+    private static void searchByText(String textQuery, String classString, Map<String, String> filters) {
         String vectorString = ClipEmbedder.embedText(textQuery);
 
         if (vectorString == null) {
@@ -46,14 +47,14 @@ public class MemeSearcher {
             return;
         }
 
-        String graphqlQuery = buildWeivateQuery(vectorString, filters);
+        String graphqlQuery = buildWeivateQuery(vectorString, classString, filters);
 
         executeSearch(graphqlQuery);
     }
 
     
 
-    private static void searchByImage(String imagePath, Map<String, String> filters) {
+    private static void searchByImage(String imagePath, String classString, Map<String, String> filters) {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             System.err.println("Error: Image file does not exist");
@@ -67,13 +68,13 @@ public class MemeSearcher {
             return;
         }
 
-        String graphqlQuery = buildWeivateQuery(vectorString, filters);
+        String graphqlQuery = buildWeivateQuery(vectorString, classString, filters);
 
         executeSearch(graphqlQuery);
     }
     
 
-    private static String buildWeivateQuery(String vectorJson, Map<String, String> filters) {
+    private static String buildWeivateQuery(String vectorJson, String classString, Map<String, String> filters) {
         // TO DO: add filters to the query
         String filterString = "";
         if (filters != null && !filters.isEmpty()) {
@@ -81,7 +82,8 @@ public class MemeSearcher {
         }
         
         return String.format(
-            "{ \"query\": \"{ Get { MemeImage(nearVector: {vector: %s} limit: 20 %s) { name _additional { distance } } } }\" }",
+            "{ \"query\": \"{ Get { %s(nearVector: {vector: %s} limit: 20 %s) { name _additional { distance } } } }\" }",
+            classString,
             vectorJson,
             filterString
         );

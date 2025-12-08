@@ -1,9 +1,11 @@
-package cat.dog.service;
+package cat.dog.repository;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import cat.dog.utility.DatabaseConfig;
 
 public class DropTablePostgres {
     public static void main(String[] args) {

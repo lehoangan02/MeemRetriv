@@ -2,7 +2,7 @@ package cat.dog.repository;
 
 import cat.dog.dto.LabelRecord;
 import cat.dog.model.Sentiment;
-import cat.dog.service.DatabaseConfig;
+import cat.dog.utility.DatabaseConfig;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

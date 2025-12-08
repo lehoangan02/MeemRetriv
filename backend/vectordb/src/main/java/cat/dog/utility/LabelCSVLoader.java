@@ -1,4 +1,4 @@
-package cat.dog.service;
+package cat.dog.utility;
 
 import cat.dog.dto.LabelRecord;
 import cat.dog.model.Sentiment;
