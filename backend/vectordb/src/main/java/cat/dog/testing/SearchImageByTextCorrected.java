@@ -7,11 +7,7 @@ import cat.dog.repository.LabelDbManager;
 
 public class SearchImageByTextCorrected {
     public static void main(String[] args) {
-        LabelDbManager dbManager = new LabelDbManager(
-            "jdbc:postgresql://localhost:5432/label_db", 
-            "postgres", 
-            "123456789" // <--- Replace with your actual password
-        );
+        LabelDbManager dbManager = new LabelDbManager();
         List<LabelRecord> records = dbManager.searchByText("Old times! bigbangtheory");
         if (!records.isEmpty()) {
             System.out.println("Records found:\n");

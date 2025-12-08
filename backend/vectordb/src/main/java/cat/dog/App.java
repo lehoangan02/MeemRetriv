@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import cat.dog.repository.LabelDbManager;
 import cat.dog.service.LabelCSVLoader;
+import cat.dog.service.PostgresSchemaCreator;
 
 @SpringBootApplication
 public class App implements CommandLineRunner
@@ -19,13 +20,15 @@ public class App implements CommandLineRunner
     }
     @Override
     public void run(String... args) throws Exception {
-        
+        setupPostgresSchema();
+        addLabelTableToPostgres();
+    }
+    private void setupPostgresSchema() {
+        PostgresSchemaCreator.createSchema("../schema/schema_label.sql");
+    }
+    private void addLabelTableToPostgres() {
         // 1. Setup the connection (Same as you had before)
-        LabelDbManager dbManager = new LabelDbManager(
-            "jdbc:postgresql://localhost:5432/label_db", 
-            "postgres", 
-            "123456789" // <--- Replace with your actual password
-        );
+        LabelDbManager dbManager = new LabelDbManager();
 
         // 2. Check if DB is already set up
         if (dbManager.hasData()) {

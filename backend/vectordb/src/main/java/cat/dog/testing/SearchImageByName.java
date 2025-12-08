@@ -5,11 +5,7 @@ import cat.dog.repository.LabelDbManager;
 
 public class SearchImageByName {
     public static void main(String[] args) {
-        LabelDbManager dbManager = new LabelDbManager(
-            "jdbc:postgresql://localhost:5432/label_db", 
-            "postgres", 
-            "123456789" // <--- Replace with your actual password
-        );
+        LabelDbManager dbManager = new LabelDbManager();
         LabelRecord record = dbManager.getRecordByImageName("image_292.jpg");
         if (record != null) {
             System.out.println("Record found:\n");

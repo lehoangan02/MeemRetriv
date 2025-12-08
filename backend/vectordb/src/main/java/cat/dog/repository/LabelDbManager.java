@@ -2,6 +2,7 @@ package cat.dog.repository;
 
 import cat.dog.dto.LabelRecord;
 import cat.dog.model.Sentiment;
+import cat.dog.service.DatabaseConfig;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -13,29 +14,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class LabelDbManager {
-    private String url;
-    private String user;
-    private String password;
     
-    public LabelDbManager(String url, String user, String password) {
-        this.url = url;
-        this.user = user;
-        this.password = password;
+    public LabelDbManager() {
     }
 
     public void insertLabelRecord(LabelRecord record) {
-        String sql = "INSERT INTO label (number, image_name, text_ocr, text_corrected, overall_sentiment) " +
-                     "VALUES (?, ?, ?, ?, ?::sentiment_level)";
+
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
+        String sql = "INSERT INTO label (number, image_name, image_path, cleaned_image_path, text_ocr, text_corrected, overall_sentiment) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?::sentiment_level)";
         try (Connection conn = DriverManager.getConnection(url, user, password);
             PreparedStatement pstmnt = conn.prepareStatement(sql)) {
             pstmnt.setInt(1, record.getNumber());
             pstmnt.setString(2, record.getImageName());
-            pstmnt.setString(3, record.getTextOcr());
-            pstmnt.setString(4, record.getTextCorrected());
+            pstmnt.setString(3, record.getImagePath());
+            pstmnt.setString(4, record.getCleanedImagePath());
+            pstmnt.setString(5, record.getTextOcr());
+            pstmnt.setString(6, record.getTextCorrected());
             if (record.getSentiment() != null) {
-                pstmnt.setString(5, record.getSentiment().toDbValue());
+                pstmnt.setString(7, record.getSentiment().toDbValue());
             } else {
-                pstmnt.setNull(5, Types.VARCHAR);
+                pstmnt.setNull(7, Types.VARCHAR);
             }
             pstmnt.executeUpdate();
         } catch (SQLException e) {
@@ -44,6 +46,11 @@ public class LabelDbManager {
         }
     }
     public boolean hasData() {
+
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
         String sql = "SELECT 1 FROM label LIMIT 1"; // Fast check for any row
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
@@ -60,7 +67,12 @@ public class LabelDbManager {
         }
     }
     public LabelRecord getRecordByImageName(String imageName) {
-        String sql = "SELECT number, image_name, text_ocr, text_corrected, overall_sentiment FROM label WHERE image_name = ?";
+
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
+        String sql = "SELECT number, image_name, image_path, text_ocr, text_corrected, overall_sentiment FROM label WHERE image_name = ?";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -72,6 +84,8 @@ public class LabelDbManager {
                     // 1. Extract raw data from the database row
                     int number = rs.getInt("number");
                     String name = rs.getString("image_name");
+                    String imagePath = rs.getString("image_path");
+                    String cleanedImagePath = rs.getString("cleaned_image_path");
                     String ocr = rs.getString("text_ocr");
                     String corrected = rs.getString("text_corrected");
                     String sentimentStr = rs.getString("overall_sentiment");
@@ -85,7 +99,7 @@ public class LabelDbManager {
                     }
 
                     // 3. Return the populated DTO
-                    return new LabelRecord(number, name, ocr, corrected, sentiment);
+                    return new LabelRecord(number, name, imagePath, cleanedImagePath, ocr, corrected, sentiment);
                 }
             }
 
@@ -120,6 +134,10 @@ public class LabelDbManager {
             return results;
         }
 
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
         // 3. The SQL remains the same
         String sql = "SELECT * FROM label WHERE to_tsvector('english', text_corrected) @@ to_tsquery('english', ?)";
 
@@ -132,6 +150,8 @@ public class LabelDbManager {
                 while (rs.next()) {
                     int number = rs.getInt("number");
                     String name = rs.getString("image_name");
+                    String imagePath = rs.getString("image_path");
+                    String cleanedImagePath = rs.getString("cleaned_image_path");
                     String ocr = rs.getString("text_ocr");
                     String corrected = rs.getString("text_corrected");
                     
@@ -141,7 +161,7 @@ public class LabelDbManager {
                         sentiment = Sentiment.valueOf(sentimentStr);
                     }
 
-                    results.add(new LabelRecord(number, name, ocr, corrected, sentiment));
+                    results.add(new LabelRecord(number, name, imagePath, cleanedImagePath, ocr, corrected, sentiment));
                 }
             }
 

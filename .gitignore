@@ -213,3 +213,5 @@ __marimo__/
 backend/vectordb/mobileclip_s0.pt
 /DATA/OLD_LEGO_DATA
 /DATA/archive
+/DATA/cleaned
+/DATA/extracted_faces

@@ -81,7 +81,7 @@ public class MemeSearcher {
         }
         
         return String.format(
-            "{ \"query\": \"{ Get { MemeImage(nearVector: {vector: %s} limit: 3 %s) { name _additional { distance } } } }\" }",
+            "{ \"query\": \"{ Get { MemeImage(nearVector: {vector: %s} limit: 20 %s) { name _additional { distance } } } }\" }",
             vectorJson,
             filterString
         );
