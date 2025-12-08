@@ -44,11 +44,11 @@ public class LabelCSVLoader {
                         imageName = imageName.substring(0, dotIndex);
                     }
 
-                    String imagePath = "../../../DATA/archive/images/images/" + imageName + extension;
-                    // example: image_1.jpg -> ../../../DATA/archive/images/images/image_1.jpg
+                    String imagePath = "./../../DATA/archive/images/images/" + imageName + extension;
+                    // example: image_1.jpg -> ./../../DATA/archive/images/images/image_1.jpg
 
-                    String cleanedImagePath = "../../../DATA/cleaned/" + imageName + extension;
-                    // example: image_1.jpg -> ../../../DATA/cleaned/image_1.jpg
+                    String cleanedImagePath = "./../../DATA/cleaned/" + imageName + extension;
+                    // example: image_1.jpg -> ./../../DATA/cleaned/image_1.jpg
 
                     String textOcr = record.get(2);
                     String textCorrected = record.get(3);

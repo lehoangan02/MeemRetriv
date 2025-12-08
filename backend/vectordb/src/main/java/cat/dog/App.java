@@ -24,7 +24,7 @@ public class App implements CommandLineRunner
         addLabelTableToPostgres();
     }
     private void setupPostgresSchema() {
-        PostgresSchemaCreator.createSchema("../schema/schema_label.sql");
+        PostgresSchemaCreator.createSchema("./../schema/schema_label.sql");
     }
     private void addLabelTableToPostgres() {
         // 1. Setup the connection (Same as you had before)

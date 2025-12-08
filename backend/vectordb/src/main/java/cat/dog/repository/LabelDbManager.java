@@ -72,7 +72,7 @@ public class LabelDbManager {
         String user = DatabaseConfig.getInstance().getPostgresUser();
         String password = DatabaseConfig.getInstance().getPostgresPassword();
 
-        String sql = "SELECT number, image_name, image_path, text_ocr, text_corrected, overall_sentiment FROM label WHERE image_name = ?";
+        String sql = "SELECT number, image_name, image_path, cleaned_image_path, text_ocr, text_corrected, overall_sentiment FROM label WHERE image_name = ?";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
             PreparedStatement pstmt = conn.prepareStatement(sql)) {
