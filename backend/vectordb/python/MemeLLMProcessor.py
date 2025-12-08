@@ -52,17 +52,19 @@ class MemeLLMProcessor:
         caption_text = caption_match.group(1) if caption_match else ""
 
         system_prompt = f"""
-You are a data processing assistant. 
-Generate JSON with keys: celebrities, caption, text. 
-- celebrities: use the detected celebrities if any
-- caption: exact text in quotes from the input
-- text: rewrite the rest of the description generically (replace celebrities with 'a man'/'a woman', keep actions)
-Return ONLY valid JSON.
+        You are a data processing assistant. 
+        Generate JSON with keys: celebrities, caption, text. 
+        - celebrities: use the detected celebrities if any
+        - caption: exact text in quotes from the input
+        - text: rewrite the rest of the description generically. 
+        For each detected celebrity, replace with 'a person' separately. 
+        Maintain the number of people and their order in actions.
+        Return ONLY valid JSON.
 
-Detected celebrities: {celebrities_text}
-Caption: {caption_text}
-Input: {query}
-"""
+        Detected celebrities: {celebrities_text}
+        Caption: {caption_text}
+        Input: {query}
+        """
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -90,8 +92,11 @@ if __name__ == "__main__":
     # query = """
     # Meme about Leonardo DiCaprio holding a glass of wine and smirking. The caption reads: "When you realize you've been acting for over 20 years and still haven't won an Oscar."
     # """
+    # query = """
+    # Meme about Tom Hanks and Leonardo DiCaprio having a coffee together. The caption reads: "Actors just want to chill."
+    # """
     query = """
-    Meme about Tom Hanks and Leonardo DiCaprio having a coffee together. The caption reads: "Actors just want to chill."
+    A woman is handing a gift to a man, while another woman is taking a photo. The caption reads: "Memories captured forever."
     """
     result = processor.process_query(query)
     print(result)
