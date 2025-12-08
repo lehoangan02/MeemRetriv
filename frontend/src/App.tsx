@@ -1,5 +1,14 @@
+import ThemeToggle from "@/components/theme-toggle";
+
 function App() {
-  return <button className="btn-primary btn ">Main</button>;
+  return (
+    <div>
+      <header>
+        <ThemeToggle />
+      </header>
+      <main></main>
+    </div>
+  );
 }
 
 export default App;

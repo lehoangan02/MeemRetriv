@@ -1,4 +1,11 @@
 @import "tailwindcss";
-@plugin "daisyui" {
-  themes: light --default, black --prefersdark;
+@plugin "tailwind-scrollbar" {
+  nocompatible: true;
 }
+@plugin "daisyui" {
+  themes:
+    wireframe --default,
+    black --prefersdark;
+}
+
+@custom-variant dark (&:where([data-theme=black], [data-theme=black] *));
