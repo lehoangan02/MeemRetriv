@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import cat.dog.repository.LabelDbManager;
+import cat.dog.repository.MemeVectorImporter;
 import cat.dog.repository.PostgresSchemaCreator;
+import cat.dog.repository.WeviateSchema;
 import cat.dog.utility.LabelCSVLoader;
 
 @SpringBootApplication
@@ -22,6 +24,8 @@ public class App implements CommandLineRunner
     public void run(String... args) throws Exception {
         setupPostgresSchema();
         addLabelTableToPostgres();
+        setupWeaviateSchema();
+        importMemeVectorsToWeaviate();
     }
     private void setupPostgresSchema() {
         PostgresSchemaCreator.createSchema("./../schema/schema_label.sql");
@@ -43,10 +47,12 @@ public class App implements CommandLineRunner
             importer.importCSV("./../../DATA/archive/labels.csv"); 
         }
     }
-    private void setupWeaviateSchema() {
-        
+    private void setupWeaviateSchema() throws Exception {
+        WeviateSchema.createWeviateClass("MemeImage", "A meme image's precomputed CLIP vector");
+        WeviateSchema.createWeviateClass("MemeImageCleaned", "A meme image without text and its precomputed CLIP vector");
     }
     private void importMemeVectorsToWeaviate() {
-        
+        MemeVectorImporter.importVectors("MemeImage", "./../../DATA/embeddings/");
+        MemeVectorImporter.importVectors("MemeImageCleaned", "./../../DATA/embeddings_cleaned/");
     }
 }
