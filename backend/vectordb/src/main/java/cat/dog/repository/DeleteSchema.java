@@ -5,10 +5,14 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import cat.dog.utility.DatabaseConfig;
+
 public class DeleteSchema {
-    private static final String BASE_URL = "http://127.0.0.1:8080/v1/schema/";
 
     public static void main(String[] args) throws Exception {
+
+        final String BASE_URL = DatabaseConfig.getInstance().getWeviateUrl() + "/classes/";
+
         if (args.length == 0) {
             System.out.println("Usage: java cat.dog.repository.DeleteSchema <ClassName>");
             return;

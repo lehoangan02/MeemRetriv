@@ -7,8 +7,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import cat.dog.repository.LabelDbManager;
-import cat.dog.service.LabelCSVLoader;
-import cat.dog.service.PostgresSchemaCreator;
+import cat.dog.repository.PostgresSchemaCreator;
+import cat.dog.utility.LabelCSVLoader;
 
 @SpringBootApplication
 public class App implements CommandLineRunner
@@ -42,5 +42,11 @@ public class App implements CommandLineRunner
             // Make sure this path is correct on your machine!
             importer.importCSV("./../../DATA/archive/labels.csv"); 
         }
+    }
+    private void setupWeaviateSchema() {
+        
+    }
+    private void importMemeVectorsToWeaviate() {
+        
     }
 }

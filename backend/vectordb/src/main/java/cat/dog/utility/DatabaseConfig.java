@@ -1,4 +1,4 @@
-package cat.dog.service;
+package cat.dog.utility;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
@@ -36,5 +36,13 @@ public class DatabaseConfig {
     public String getPostgresPassword() { return password; }
     public String getJdbcUrl() {
         return String.format("jdbc:postgresql://%s:%d/%s", server, port, dbName);
+    }
+
+    // Class fields to hold weviate configuration
+    private final String wevivate_url = "http://127.0.0.1:8080/v1/";
+
+
+    public String getWeviateUrl() {
+        return wevivate_url;
     }
 }

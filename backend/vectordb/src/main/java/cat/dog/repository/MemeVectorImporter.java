@@ -15,19 +15,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cat.dog.utility.DatabaseConfig;
+
 public class MemeVectorImporter {
 
-    // Configuration
-    private static final String WEAVIATE_URL = "http://127.0.0.1:8080/v1/objects";
-    // Adjust this path if your embeddings are elsewhere relative to where you run the command
-    private static final String EMBEDDINGS_DIR = "./../../DATA/embeddings/"; 
-    private static final String CLASS_NAME = "MemeImage";
-    
-    // Virtual Environment Configuration
     private static final String VENV_DIR_NAME = ".venv";
     private static final String PYTHON_EXEC;
     private static final String PIP_EXEC;
-    private static final String SYS_PYTHON; // System python command (python vs python3)
+    private static final String SYS_PYTHON;
 
     static {
         boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
@@ -43,16 +38,19 @@ public class MemeVectorImporter {
     }
 
     public static void main(String[] args) {
-        // 1. Setup Isolated Python Environment
+        importVectors("MemeImageCleaned", "./../../DATA/embeddings_cleaned/");
+        // You can call it again for another class/dir:
+        // importVectors("OtherClass", "./../../DATA/other_embeddings/");
+    }
+
+    public static void importVectors(String className, String embeddingsDir) {
         if (!setupVirtualEnv()) {
             System.err.println("CRITICAL: Failed to setup local Python virtual environment. Exiting.");
             System.exit(1);
         }
 
         HttpClient client = HttpClient.newHttpClient();
-        Path startPath = Paths.get(EMBEDDINGS_DIR);
-
-        System.out.println("Starting import from: " + startPath.toAbsolutePath());
+        Path startPath = Paths.get(embeddingsDir);
 
         if (!Files.exists(startPath)) {
             System.err.println("Error: Embeddings directory not found at " + startPath.toAbsolutePath());
@@ -60,23 +58,20 @@ public class MemeVectorImporter {
         }
 
         try (Stream<Path> stream = Files.walk(startPath)) {
-            // Collect to list first to get total count for progress bar
             List<Path> files = stream
-                .filter(p -> !Files.isDirectory(p))
-                .filter(p -> p.toString().endsWith(".npy"))
-                .collect(Collectors.toList());
-            
-            int total = files.size();
-            System.out.println("Found " + total + " vector files. This will take some time...");
-            
-            AtomicInteger counter = new AtomicInteger(0);
+                    .filter(p -> !Files.isDirectory(p))
+                    .filter(p -> p.toString().endsWith(".npy"))
+                    .collect(Collectors.toList());
 
-            files.forEach(path -> {
-                int current = counter.incrementAndGet();
-                processFile(client, path, current, total);
-            });
-            
-            System.out.println("\nImport process complete!");
+            int total = files.size();
+            System.out.println("Found " + total + " vector files for class " + className);
+
+            AtomicInteger counter = new AtomicInteger(0);
+            for (Path file : files) {
+                processFile(client, file, counter.incrementAndGet(), total, className);
+            }
+
+            System.out.println("\nImport process complete for class " + className);
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -85,10 +80,9 @@ public class MemeVectorImporter {
 
     private static boolean setupVirtualEnv() {
         File venvDir = new File(VENV_DIR_NAME);
-        
+
         if (!venvDir.exists()) {
             System.out.println("Creating local virtual environment in ./" + VENV_DIR_NAME + " ...");
-            // Fix: Use SYS_PYTHON instead of hardcoded 'python3' for Windows support
             if (!runCommand(SYS_PYTHON, "-m", "venv", VENV_DIR_NAME)) {
                 System.err.println("Failed to create venv.");
                 return false;
@@ -107,7 +101,7 @@ public class MemeVectorImporter {
     private static boolean runCommand(String... command) {
         try {
             ProcessBuilder pb = new ProcessBuilder(command);
-            pb.inheritIO(); 
+            pb.inheritIO();
             Process p = pb.start();
             return p.waitFor() == 0;
         } catch (Exception e) {
@@ -116,47 +110,43 @@ public class MemeVectorImporter {
         }
     }
 
-    private static void processFile(HttpClient client, Path filePath, int current, int total) {
+    private static void processFile(HttpClient client, Path filePath, int current, int total, String className) {
+        String WEAVIATE_URL = DatabaseConfig.getInstance().getWeviateUrl() + "/objects";
         String fileName = filePath.getFileName().toString();
-        // Fix 1: Properly handle Windows paths and escape single quotes in filenames
         String absPath = filePath.toAbsolutePath().toString()
-                                 .replace("\\", "\\\\")
-                                 .replace("'", "\\'");
+                .replace("\\", "\\\\")
+                .replace("'", "\\'");
 
-        // Simple progress log every 50 files
         if (current % 50 == 0 || current == total) {
-            System.out.printf("Progress: %d / %d (%.1f%%) - Processing %s\n", 
-                              current, total, (current / (float)total) * 100, fileName);
+            System.out.printf("Progress: %d/%d (%.1f%%) - Processing %s%n",
+                    current, total, (current / (float) total) * 100, fileName);
         }
 
         try {
-            String pythonScript = 
-                "import numpy as np, json, uuid\n" +
-                "try:\n" +
-                "  vector = np.load('" + absPath + "')\n" +
-                "  vec_json = json.dumps(vector.flatten().tolist())\n" +
-                "  # Deterministic UUID based on filename ensures no duplicates on re-run\n" +
-                "  unique_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, '" + fileName + "'))\n" +
-                "  print(f'{unique_id}|{vec_json}')\n" +
-                "except Exception as e:\n" +
-                "  print(f'ERROR|{str(e)}')";
+            String pythonScript =
+                    "import numpy as np, json, uuid\n" +
+                    "try:\n" +
+                    "  vector = np.load('" + absPath + "')\n" +
+                    "  vec_json = json.dumps(vector.flatten().tolist())\n" +
+                    "  unique_id = str(uuid.uuid5(uuid.NAMESPACE_DNS, '" + fileName + "'))\n" +
+                    "  print(f'{unique_id}|{vec_json}')\n" +
+                    "except Exception as e:\n" +
+                    "  print(f'ERROR|{str(e)}')";
 
             ProcessBuilder pb = new ProcessBuilder(PYTHON_EXEC, "-c", pythonScript);
             Process process = pb.start();
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String output = reader.readLine();
-            
-            // Consume stderr to prevent blocking if buffer fills up
+
             BufferedReader errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream()));
             StringBuilder errorLog = new StringBuilder();
             String line;
             while ((line = errorReader.readLine()) != null) {
                 errorLog.append(line).append("\n");
             }
-            
-            int exitCode = process.waitFor();
 
+            int exitCode = process.waitFor();
             if (exitCode != 0 || output == null || output.startsWith("ERROR|")) {
                 String err = (output != null && output.startsWith("ERROR|")) ? output.substring(6) : errorLog.toString();
                 System.err.println("[FAIL] " + fileName + " : " + err.trim());
@@ -168,15 +158,18 @@ public class MemeVectorImporter {
             String vectorJson = parts[1];
 
             String jsonPayload = String.format(
-                "{" +
-                    "\"id\": \"%s\"," +
-                    "\"class\": \"%s\"," +
-                    "\"vector\": %s," +
-                    "\"properties\": {" +
-                        "\"name\": \"%s\"" +
-                    "}" +
-                "}", 
-                uuid, CLASS_NAME, vectorJson, fileName
+                "{\n" +
+                "  \"id\": \"%s\",\n" +
+                "  \"class\": \"%s\",\n" +
+                "  \"vector\": %s,\n" +
+                "  \"properties\": {\n" +
+                "    \"name\": \"%s\"\n" +
+                "  }\n" +
+                "}",
+                uuid,
+                className,
+                vectorJson,
+                fileName
             );
 
             HttpRequest request = HttpRequest.newBuilder()
@@ -195,7 +188,7 @@ public class MemeVectorImporter {
                     System.err.println("API Error " + response.statusCode() + " for " + fileName + ": " + response.body());
                 }
             }
-
+            
         } catch (Exception e) {
             System.err.println("Exception processing " + fileName + ": " + e.getMessage());
         }

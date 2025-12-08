@@ -1,7 +1,7 @@
 package cat.dog.controller;
 
 import cat.dog.dto.Base64Image;
-import cat.dog.service.Base64ToImageConverter;
+import cat.dog.utility.Base64ToImageConverter;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

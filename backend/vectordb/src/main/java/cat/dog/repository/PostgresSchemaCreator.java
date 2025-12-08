@@ -1,4 +1,4 @@
-package cat.dog.service;
+package cat.dog.repository;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -7,6 +7,8 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import cat.dog.utility.DatabaseConfig;
 
 public class PostgresSchemaCreator {
 

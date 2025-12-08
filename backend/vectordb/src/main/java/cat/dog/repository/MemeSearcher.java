@@ -1,7 +1,5 @@
 package cat.dog.repository;
 
-import cat.dog.service.ClipEmbedder;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
@@ -13,9 +11,11 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpRequest;
 import java.util.Map;
 
+import cat.dog.utility.ClipEmbedder;
+import cat.dog.utility.DatabaseConfig;
+
 public class MemeSearcher {
     
-    private static final String WEVIATE_URL = "http://127.0.0.1:8080/v1/graphql";
     private static final String VENV_DIR_NAME = ".venv";
     private static final String PYTHON_EXEC;
 
@@ -94,6 +94,9 @@ public class MemeSearcher {
     }
     
     private static void executeSearch(String jsonPayload) {
+
+        final String WEVIATE_URL = DatabaseConfig.getInstance().getWeviateUrl() + "/graphql";
+
         try {
             HttpClient client = HttpClient.newHttpClient();
             HttpRequest request = HttpRequest.newBuilder()
