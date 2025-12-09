@@ -10,6 +10,7 @@ import cat.dog.repository.PostgresDbManager;
 import cat.dog.repository.MemeVectorImporter;
 import cat.dog.repository.PostgresSchemaCreator;
 import cat.dog.repository.WeviateSchema;
+import cat.dog.repository.ElasticSearchDBManager;
 import cat.dog.utility.CSVLoader;
 
 @SpringBootApplication
@@ -27,6 +28,8 @@ public class App implements CommandLineRunner
         addCelebTableToPostgres();
         setupWeaviateSchema();
         importMemeVectorsToWeaviate();
+        setupElasticSearchIndices();
+        importElasticSearchData();
     }
     private void setupPostgresSchema() {
         PostgresSchemaCreator.createSchema("./../schema/schema_label.sql");
@@ -72,5 +75,15 @@ public class App implements CommandLineRunner
     private void importMemeVectorsToWeaviate() {
         MemeVectorImporter.importVectors("MemeImage", "./../../DATA/embeddings/");
         MemeVectorImporter.importVectors("MemeImageCleaned", "./../../DATA/embeddings_cleaned/");
+    }
+    private void setupElasticSearchIndices() {
+        ElasticSearchDBManager dbManager = ElasticSearchDBManager.getInstance();
+        dbManager.addCelebIndex();
+        dbManager.addCaptionIndex();
+    }
+    private void importElasticSearchData() {
+        ElasticSearchDBManager dbManager = ElasticSearchDBManager.getInstance();
+        dbManager.importCelebNames();
+        dbManager.importCaptions();
     }
 }

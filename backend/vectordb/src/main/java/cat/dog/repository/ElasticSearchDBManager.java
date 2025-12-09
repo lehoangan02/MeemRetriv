@@ -139,9 +139,17 @@ public class ElasticSearchDBManager {
     }
 
     public void importCelebNames() {
+
+        // check if there is any document in the index
+        String indexName = "celebrities";
+        boolean hasDocs = hasAnyDocuments(indexName);
+        if (hasDocs) {
+            System.out.println("Index " + indexName + " already has documents. Skipping import.");
+            return;
+        }
+
         PostgresDbManager pgManager = new PostgresDbManager();
         List<String> celebNames = pgManager.getAllCelebNames();
-        String indexName = "celebrities";
         String url = DatabaseConfig.getInstance().getElasticsearchUrl();
 
         HttpClient client = HttpClient.newHttpClient();
@@ -293,11 +301,17 @@ public class ElasticSearchDBManager {
     }
 
     public void importCaptions() {
+        // check if there is any document in the index
+        String indexName = "captions";
+        boolean hasDocs = hasAnyDocuments(indexName);
+        if (hasDocs) {
+            System.out.println("Index " + indexName + " already has documents. Skipping import.");
+            return;
+        }
         PostgresDbManager pgManager = new PostgresDbManager();
         // Fetch the list of pairs (ID, Caption)
         List<Map.Entry<Integer, String>> captions = pgManager.getAllCaptions();
         
-        String indexName = "captions";
         String url = DatabaseConfig.getInstance().getElasticsearchUrl();
 
         HttpClient client = HttpClient.newHttpClient();
