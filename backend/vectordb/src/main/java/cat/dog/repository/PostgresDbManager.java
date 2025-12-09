@@ -150,6 +150,32 @@ public class PostgresDbManager {
         // Return null if no record was found
         return null; 
     }
+
+    public List<String> getAllCaptions() {
+        List<String> captions = new ArrayList<>();
+
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
+        String sql = "SELECT text_corrected FROM label";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                String caption = rs.getString("text_corrected");
+                captions.add(caption);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error retrieving captions: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return captions;
+    }
     public List<LabelRecord> searchLabelByText(String userQuery) {
         List<LabelRecord> results = new ArrayList<>();
 

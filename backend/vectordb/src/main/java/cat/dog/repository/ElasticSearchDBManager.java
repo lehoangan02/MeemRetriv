@@ -283,6 +283,97 @@ public class ElasticSearchDBManager {
         }
     }
 
+    public void importCaptions() {
+        PostgresDbManager pgManager = new PostgresDbManager();
+        List<String> captions = pgManager.getAllCaptions();
+        String indexName = "captions";
+        String url = DatabaseConfig.getInstance().getElasticsearchUrl();
+
+        HttpClient client = HttpClient.newHttpClient();
+        
+        // Counter for ref_id since we only have a list of strings
+        // If your DB has specific IDs, you should fetch those instead!
+        int idCounter = 1; 
+
+        for (String caption : captions) {
+            try {
+                // Escape quotes and remove newlines to prevent broken JSON
+                String safeCaption = caption
+                    .replace("\"", "\\\"")   // Escape double quotes
+                    .replace("\n", " ")      // Replace newlines with space
+                    .replace("\r", "");      // Remove carriage returns
+
+                String jsonBody = """
+                {
+                  "caption": "%s",
+                  "ref_id": %d
+                }
+                """.formatted(safeCaption, idCounter);
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url + "/" + indexName + "/_doc"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build();
+
+                HttpResponse<String> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                System.out.println("Inserted caption " + idCounter + " → " + response.statusCode());
+                
+                idCounter++;
+
+            } catch (Exception e) {
+                System.out.println("Failed to insert caption: " + caption);
+                e.printStackTrace();
+            }
+        }
+        
+        System.out.println("Finished importing " + captions.size() + " captions.");
+    }
+
+    public void fuzzySearchCaptions(String query, float minScore) {
+        String indexName = "captions";
+        String url = DatabaseConfig.getInstance().getElasticsearchUrl();
+
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+
+            String jsonBody = """
+            {
+              "query": {
+                "match": {
+                  "caption": {
+                    "query": "%s",
+                    "fuzziness": "AUTO"
+                  }
+                }
+              }
+            }
+            """.formatted(query.replace("\"", "\\\""));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url + "/" + indexName + "/_search"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                System.out.println("Search failed: " + response.body());
+                return;
+            }
+
+            String body = response.body();
+            System.out.println("Search results: " + body);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void main(String[] args) {
         String indexName = "celebrities";
         // boolean exists = checkIfIndexExists(indexName);
@@ -301,5 +392,8 @@ public class ElasticSearchDBManager {
         // importCelebNames();
         // List<String> results = fuzzySearchCelebNames("Obama", 6.0f);
         // System.out.println("Fuzzy search results for 'Obama': " + results);
+        // addCaptionIndex();
+        // importCaptions();
+        fuzzySearchCaptions("funny cat", 5.0f);
     }
 }
