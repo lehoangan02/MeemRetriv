@@ -2,7 +2,7 @@ curl -X GET "http://localhost:9200/celebrities/_search?pretty" -H "Content-Type:
   "query": {
     "match": {
       "name": {
-        "query": "Crstiano Roneldo",
+        "query": "Obama",
         "fuzziness": "AUTO"
       }
     }

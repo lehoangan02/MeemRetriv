@@ -7,6 +7,7 @@ import java.net.http.HttpResponse;
 import cat.dog.utility.DatabaseConfig;
 
 import java.net.http.HttpRequest;
+import java.util.List;
 
 public class ElasticSearchDBManager {
     // private static ElasticSearchDBManager INSTANCE = new ElasticSearchDBManager();
@@ -91,6 +92,78 @@ public class ElasticSearchDBManager {
         }
 
         // create the index
+        createCelebIndex();
+    }
+    private void createCelebIndex() {
+        String indexName = "celebrities";
+        String url = DatabaseConfig.getInstance().getElasticsearchUrl();
+
+        String jsonBody = """
+        {
+        "mappings": {
+            "properties": {
+            "name": {
+                "type": "text"
+            }
+            }
+        }
+        }
+        """;
+
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url + "/" + indexName))
+                    .header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Create index response: " + response.body());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void importCelebNames() {
+        PostgresDbManager pgManager = new PostgresDbManager();
+        List<String> celebNames = pgManager.getAllCelebNames();
+        String indexName = "celebrities";
+        String url = DatabaseConfig.getInstance().getElasticsearchUrl();
+
+        HttpClient client = HttpClient.newHttpClient();
+
+        for (String name : celebNames) {
+            try {
+                // Document JSON
+                String jsonBody = """
+                {
+                "name": "%s"
+                }
+                """.formatted(name.replace("\"", "\\\"")); // escape quotes
+
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(url + "/" + indexName + "/_doc"))
+                        .header("Content-Type", "application/json")
+                        .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build();
+
+                HttpResponse<String> response =
+                        client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                System.out.println("Inserted: " + name + " → " + response.statusCode());
+
+            } catch (Exception e) {
+                System.out.println("Failed to insert: " + name);
+                e.printStackTrace();
+            }
+        }
+
+        System.out.println("Finished importing " + celebNames.size() + " celebrity names.");
     }
 
     public void main(String[] args) {
@@ -101,11 +174,13 @@ public class ElasticSearchDBManager {
         // } else {
         //     System.out.println("Index " + indexName + " does not exist.");
         // }
-        boolean hasDocs = hasAnyDocuments(indexName);
-        if (hasDocs) {
-            System.out.println("Index " + indexName + " has documents.");
-        } else {
-            System.out.println("Index " + indexName + " has no documents.");
-        }
+        // boolean hasDocs = hasAnyDocuments(indexName);
+        // if (hasDocs) {
+        //     System.out.println("Index " + indexName + " has documents.");
+        // } else {
+        //     System.out.println("Index " + indexName + " has no documents.");
+        // }
+        // addCelebIndex();
+        importCelebNames();
     }
 }

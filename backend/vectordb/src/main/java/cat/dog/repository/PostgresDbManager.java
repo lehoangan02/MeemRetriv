@@ -246,4 +246,30 @@ public class PostgresDbManager {
 
         return results;
     }
+
+    public List<String> getAllCelebNames() {
+        List<String> celebNames = new ArrayList<>();
+
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
+        String sql = "SELECT DISTINCT celeb_name FROM celeb";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()) {
+
+            while (rs.next()) {
+                String name = rs.getString("celeb_name");
+                celebNames.add(name);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error retrieving celeb names: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return celebNames;
+    }
 }
