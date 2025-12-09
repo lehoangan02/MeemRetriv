@@ -1,6 +1,6 @@
-import { create } from "zustand";
+import type { Themes } from "@/config/theme";
 
-type Themes = "wireframe" | "black";
+import { create } from "zustand";
 
 type ThemeState = {
   theme: Themes;
@@ -12,7 +12,7 @@ const STORAGE_KEY = "theme";
 export const useTheme = create<ThemeState>()((set) => {
   const savedTheme = localStorage.getItem(STORAGE_KEY) as Themes | null;
   const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  const initialTheme = savedTheme || (isDark ? "black" : "wireframe");
+  const initialTheme = savedTheme || (isDark ? "dark" : "light");
   document.documentElement.setAttribute("data-theme", initialTheme);
 
   return {

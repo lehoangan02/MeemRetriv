@@ -4,8 +4,40 @@
 }
 @plugin "daisyui" {
   themes:
-    wireframe --default,
-    black --prefersdark;
+    light --default,
+    dark --prefersdark,
+    wireframe,
+    black,
+    lemonade,
+    luxury,
+    retro,
+    lofi,
+    forest,
+    sunset;
 }
 
-@custom-variant dark (&:where([data-theme=black], [data-theme=black] *));
+@custom-variant dark (&:where(
+  [data-theme=dark],
+  [data-theme=dark] *,
+  [data-theme=black],
+  [data-theme=black] *,
+  [data-theme=luxury],
+  [data-theme=luxury] *,
+  [data-theme=forest],
+  [data-theme=forest] *,
+  [data-theme=sunset],
+  [data-theme=sunset] *
+));
+
+@theme inline {
+  --container-base: 100rem;
+  --font-mystery-quest: "Mystery Quest";
+}
+
+@utility scrollbar-stable {
+  scrollbar-gutter: stable;
+}
+
+@utility scrollbar-stable-both {
+  scrollbar-gutter: stable both-edges;
+}
