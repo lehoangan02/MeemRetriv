@@ -1,0 +1,5 @@
+curl -X POST "http://localhost:9200/celebrities/_doc/1" -H "Content-Type: application/json" -d '{"name": "Cristiano Ronaldo"}'
+curl -X POST "http://localhost:9200/celebrities/_doc/2" -H "Content-Type: application/json" -d '{"name": "Taylor Swift"}'
+curl -X POST "http://localhost:9200/celebrities/_doc/3" -H "Content-Type: application/json" -d '{"name": "Leonardo DiCaprio"}'
+curl -X POST "http://localhost:9200/celebrities/_doc/4" -H "Content-Type: application/json" -d '{"name": "Scarlett Johansson"}'
+curl -X POST "http://localhost:9200/celebrities/_doc/5" -H "Content-Type: application/json" -d '{"name": "Dwayne Johnson"}'
