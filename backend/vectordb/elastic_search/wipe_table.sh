@@ -1,1 +1,1 @@
-curl -X DELETE "http://localhost:9200/celebrities?pretty"
+curl -X DELETE "http://localhost:9200/captions?pretty"

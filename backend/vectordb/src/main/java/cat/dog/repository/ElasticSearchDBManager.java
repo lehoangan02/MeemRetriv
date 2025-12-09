@@ -7,12 +7,21 @@ import java.net.http.HttpResponse;
 import cat.dog.utility.DatabaseConfig;
 
 import java.net.http.HttpRequest;
+import java.util.ArrayList;
 import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Map;
+import java.util.AbstractMap;
 
 public class ElasticSearchDBManager {
-    // private static ElasticSearchDBManager INSTANCE = new ElasticSearchDBManager();
-    // private ElasticSearchDBManager() {
-    // }
+    private static ElasticSearchDBManager INSTANCE = new ElasticSearchDBManager();
+    private ElasticSearchDBManager() {
+
+    }
+    public static ElasticSearchDBManager getInstance() {
+        return INSTANCE;
+    }
     
     private boolean checkIfIndexExists(String indexName) {
         String url = DatabaseConfig.getInstance().getElasticsearchUrl();
@@ -285,33 +294,38 @@ public class ElasticSearchDBManager {
 
     public void importCaptions() {
         PostgresDbManager pgManager = new PostgresDbManager();
-        List<String> captions = pgManager.getAllCaptions();
+        // Fetch the list of pairs (ID, Caption)
+        List<Map.Entry<Integer, String>> captions = pgManager.getAllCaptions();
+        
         String indexName = "captions";
         String url = DatabaseConfig.getInstance().getElasticsearchUrl();
 
         HttpClient client = HttpClient.newHttpClient();
         
-        // Counter for ref_id since we only have a list of strings
-        // If your DB has specific IDs, you should fetch those instead!
-        int idCounter = 1; 
+        // Iterate over the entries
+        for (Map.Entry<Integer, String> entry : captions) {
+            int refId = entry.getKey();      // The actual DB ID
+            String caption = entry.getValue(); // The Caption text
 
-        for (String caption : captions) {
             try {
+                if (caption == null) continue; // Skip null captions
+
                 // Escape quotes and remove newlines to prevent broken JSON
                 String safeCaption = caption
                     .replace("\"", "\\\"")   // Escape double quotes
                     .replace("\n", " ")      // Replace newlines with space
                     .replace("\r", "");      // Remove carriage returns
 
+                // Use refId instead of idCounter
                 String jsonBody = """
                 {
-                  "caption": "%s",
-                  "ref_id": %d
+                "caption": "%s",
+                "ref_id": %d
                 }
-                """.formatted(safeCaption, idCounter);
+                """.formatted(safeCaption, refId);
 
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(url + "/" + indexName + "/_doc"))
+                        .uri(URI.create(url + "/" + indexName + "/_doc")) // You can also use /_doc/<refId> to force the ID
                         .header("Content-Type", "application/json")
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
                         .build();
@@ -319,36 +333,36 @@ public class ElasticSearchDBManager {
                 HttpResponse<String> response =
                         client.send(request, HttpResponse.BodyHandlers.ofString());
 
-                System.out.println("Inserted caption " + idCounter + " → " + response.statusCode());
-                
-                idCounter++;
+                System.out.println("Inserted caption ID " + refId + " → Status: " + response.statusCode());
 
             } catch (Exception e) {
-                System.out.println("Failed to insert caption: " + caption);
+                System.err.println("Failed to insert caption ID: " + refId);
                 e.printStackTrace();
             }
         }
-        
-        System.out.println("Finished importing " + captions.size() + " captions.");
     }
 
-    public void fuzzySearchCaptions(String query, float minScore) {
+    public List<Map.Entry<Integer, String>> fuzzySearchCaptions(String query, float minScore) {
         String indexName = "captions";
         String url = DatabaseConfig.getInstance().getElasticsearchUrl();
+        
+        // Key is Integer (ID), Value is String (Caption)
+        List<Map.Entry<Integer, String>> foundCaptions = new ArrayList<>();
 
         try {
             HttpClient client = HttpClient.newHttpClient();
+            ObjectMapper mapper = new ObjectMapper();
 
             String jsonBody = """
             {
-              "query": {
+            "query": {
                 "match": {
-                  "caption": {
+                "caption": {
                     "query": "%s",
                     "fuzziness": "AUTO"
-                  }
                 }
-              }
+                }
+            }
             }
             """.formatted(query.replace("\"", "\\\""));
 
@@ -362,18 +376,37 @@ public class ElasticSearchDBManager {
                     client.send(request, HttpResponse.BodyHandlers.ofString());
 
             if (response.statusCode() != 200) {
-                System.out.println("Search failed: " + response.body());
-                return;
+                System.err.println("Search failed: " + response.body());
+                return foundCaptions;
             }
 
             String body = response.body();
-            System.out.println("Search results: " + body);
+
+            JsonNode rootNode = mapper.readTree(body);
+            JsonNode hitsNode = rootNode.path("hits").path("hits");
+
+            if (hitsNode.isArray()) {
+                for (JsonNode hit : hitsNode) {
+                    double score = hit.path("_score").asDouble();
+                    
+                    if (score >= minScore) {
+                        JsonNode source = hit.path("_source");
+                        
+                        String caption = source.path("caption").asText();
+                        int refId = source.path("ref_id").asInt();
+
+                        // Key = refId, Value = caption
+                        foundCaptions.add(new AbstractMap.SimpleEntry<>(refId, caption));
+                    }
+                }
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
+        return foundCaptions;
     }
-
     public void main(String[] args) {
         String indexName = "celebrities";
         // boolean exists = checkIfIndexExists(indexName);
@@ -393,7 +426,10 @@ public class ElasticSearchDBManager {
         // List<String> results = fuzzySearchCelebNames("Obama", 6.0f);
         // System.out.println("Fuzzy search results for 'Obama': " + results);
         // addCaptionIndex();
-        // importCaptions();
-        fuzzySearchCaptions("funny cat", 5.0f);
+        importCaptions();
+        // List<Map.Entry<Integer, String>> captionResults = fuzzySearchCaptions("funny cat", 5.0f);
+        // for (Map.Entry<Integer, String> entry : captionResults) {
+        //     System.out.println("Ref ID: " + entry.getKey() + " | Caption: " + entry.getValue());
+        // }
     }
 }

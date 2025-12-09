@@ -5,14 +5,17 @@ import cat.dog.dto.LabelRecord;
 import cat.dog.model.Sentiment;
 import cat.dog.utility.DatabaseConfig;
 
+import java.security.KeyStore.Entry;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class PostgresDbManager {
     
@@ -150,23 +153,73 @@ public class PostgresDbManager {
         // Return null if no record was found
         return null; 
     }
+    public LabelRecord getRecordByNumber(int number) {
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
 
-    public List<String> getAllCaptions() {
-        List<String> captions = new ArrayList<>();
+        // Changed WHERE clause to look up by 'number'
+        String sql = "SELECT number, image_name, image_path, cleaned_image_path, text_ocr, text_corrected, overall_sentiment FROM label WHERE number = ?";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            // Set the integer parameter
+            pstmt.setInt(1, number);
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    // 1. Extract raw data
+                    // We could just use the 'number' param, but reading from DB confirms it exists
+                    int dbNumber = rs.getInt("number"); 
+                    String name = rs.getString("image_name");
+                    String imagePath = rs.getString("image_path");
+                    String cleanedImagePath = rs.getString("cleaned_image_path");
+                    String ocr = rs.getString("text_ocr");
+                    String corrected = rs.getString("text_corrected");
+                    String sentimentStr = rs.getString("overall_sentiment");
+
+                    // 2. Convert String to Enum
+                    Sentiment sentiment = null;
+                    if (sentimentStr != null) {
+                        sentiment = Sentiment.valueOf(sentimentStr);
+                    }
+
+                    // 3. Return the populated DTO
+                    return new LabelRecord(dbNumber, name, imagePath, cleanedImagePath, ocr, corrected, sentiment);
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Error searching DB by number: " + e.getMessage());
+            e.printStackTrace();
+        }
+        
+        return null; 
+    }
+
+    public List<Map.Entry<Integer, String>> getAllCaptions() {
+        // 1. Initialize list with the correct type <Integer, String>
+        List<Map.Entry<Integer, String>> captions = new ArrayList<>();
 
         String url = DatabaseConfig.getInstance().getJdbcUrl();
         String user = DatabaseConfig.getInstance().getPostgresUser();
         String password = DatabaseConfig.getInstance().getPostgresPassword();
 
-        String sql = "SELECT text_corrected FROM label";
+        // 2. Update SQL to select the number column as well
+        String sql = "SELECT number, text_corrected FROM label";
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
             PreparedStatement pstmt = conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery()) {
 
             while (rs.next()) {
+                // 3. Retrieve both the integer and the string
+                int number = rs.getInt("number");
                 String caption = rs.getString("text_corrected");
-                captions.add(caption);
+
+                // 4. Create the Entry (Key = number, Value = caption)
+                captions.add(new AbstractMap.SimpleEntry<>(number, caption));
             }
 
         } catch (SQLException e) {
