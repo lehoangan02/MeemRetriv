@@ -8,7 +8,7 @@ import cat.dog.repository.PostgresDbManager;
 public class SearchImageByTextCorrected {
     public static void main(String[] args) {
         PostgresDbManager dbManager = new PostgresDbManager();
-        List<LabelRecord> records = dbManager.searchByText("Old times! bigbangtheory");
+        List<LabelRecord> records = dbManager.searchLabelByText("Old times! bigbangtheory");
         if (!records.isEmpty()) {
             System.out.println("Records found:\n");
             System.out.println("Total records found: " + records.size());

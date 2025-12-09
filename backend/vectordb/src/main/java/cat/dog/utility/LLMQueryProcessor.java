@@ -21,8 +21,11 @@ public class LLMQueryProcessor {
 
     public LLMQueryProcessor() {
         this.objectMapper = new ObjectMapper();
+        // Allow single quotes (e.g. {'key': 'value'})
+        this.objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
+        // Allow unquoted field names (e.g. {key: "value"})
+        this.objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
     }
-
     public Map<String, Object> processQuery(String queryText) {
         try {
             // 1. Define paths relative to project root
@@ -78,31 +81,21 @@ public class LLMQueryProcessor {
      * Improved to skip Python dictionaries (single quotes) and find actual JSON (double quotes).
      */
     private String extractJsonString(String rawOutput) {
-        // Priority 1: Look for markdown code block ```json ... ```
+        // 1. Try to find markdown block first
         Pattern markdownPattern = Pattern.compile("```json(.*?)```", Pattern.DOTALL);
         Matcher markdownMatcher = markdownPattern.matcher(rawOutput);
-        
         if (markdownMatcher.find()) {
             return markdownMatcher.group(1).trim();
         }
 
-        // Priority 2: Look for the first "{" followed by a double quote
-        // This regex matches '{' followed by optional whitespace and '"'
-        // It specifically avoids matching "{'" which is common in Python dict prints
-        Pattern jsonPattern = Pattern.compile("\\{\\s*\"");
-        Matcher jsonMatcher = jsonPattern.matcher(rawOutput);
+        // 2. Find the index of the first "{" and the last "}"
+        int firstOpen = rawOutput.indexOf("{");
+        int lastClose = rawOutput.lastIndexOf("}");
 
-        if (jsonMatcher.find()) {
-            int startIndex = jsonMatcher.start();
-            // Find the last closing brace to capture the full object
-            int endIndex = rawOutput.lastIndexOf("}");
-            
-            if (endIndex > startIndex) {
-                return rawOutput.substring(startIndex, endIndex + 1);
-            }
+        if (firstOpen != -1 && lastClose > firstOpen) {
+            return rawOutput.substring(firstOpen, lastClose + 1);
         }
 
-        // Fallback: return original (will likely fail if dirty)
         return rawOutput;
     }
 
@@ -111,7 +104,7 @@ public class LLMQueryProcessor {
     // ==========================================
     public static void main(String[] args) {
         LLMQueryProcessor processor = new LLMQueryProcessor();
-        String testQuery = "Obama giving Obama a medal.";
+        String testQuery = "Meme about Tom Hanks and Leonardo DiCaprio having a coffee together. The caption reads: \"Actors just want to chill.\"\n";
 
         System.out.println("--------------------------------------------------");
         System.out.println("Starting Test...");
@@ -121,11 +114,11 @@ public class LLMQueryProcessor {
         long endTime = System.currentTimeMillis();
 
         if (result.containsKey("error")) {
-            System.err.println("❌ ERROR: " + result.get("error"));
+            System.err.println("ERROR: " + result.get("error"));
         } else {
-            System.out.println("✅ Success! (" + (endTime - startTime) + "ms)");
+            System.out.println("Success! (" + (endTime - startTime) + "ms)");
             System.out.println("Parsed Output:");
-            result.forEach((key, value) -> System.out.println("   • " + key + ": " + value));
+            result.forEach((key, value) -> System.out.println("   - " + key + ": " + value));
         }
     }
 }

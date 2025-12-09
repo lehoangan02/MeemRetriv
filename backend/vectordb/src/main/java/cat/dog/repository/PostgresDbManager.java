@@ -150,7 +150,7 @@ public class PostgresDbManager {
         // Return null if no record was found
         return null; 
     }
-    public List<LabelRecord> searchByText(String userQuery) {
+    public List<LabelRecord> searchLabelByText(String userQuery) {
         List<LabelRecord> results = new ArrayList<>();
 
         if (userQuery == null || userQuery.trim().isEmpty()) {
@@ -211,5 +211,39 @@ public class PostgresDbManager {
 
         return results;
     }
+    public List<CelebRecord> searchCelebByName(String celebName) {
+        List<CelebRecord> results = new ArrayList<>();
 
+        if (celebName == null || celebName.trim().isEmpty()) {
+            return results;
+        }
+
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
+        String sql = "SELECT * FROM celeb WHERE celeb_name ILIKE ?";
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+            PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, "%" + celebName + "%");
+
+            try (ResultSet rs = pstmt.executeQuery()) {
+                while (rs.next()) {
+                    String imagePath = rs.getString("image_path");
+                    String name = rs.getString("celeb_name");
+                    int classifiedInteger = rs.getInt("classified_integer");
+
+                    results.add(new CelebRecord(imagePath, name, classifiedInteger));
+                }
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Celeb search error: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return results;
+    }
 }
