@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.asm.Label;
 
+import cat.dog.dto.CelebRecord;
 import cat.dog.dto.LabelRecord;
 import cat.dog.repository.ElasticSearchDBManager;
 import cat.dog.repository.MemeSearcher;
@@ -21,6 +22,7 @@ public class QueryTextRetriever {
         return INSTANCE;
     }
     public List<String> retrieveSimilarImages(String textQuery, int topK) {
+        PostgresDbManager pgManager = new PostgresDbManager();
         LLMQueryProcessor llmQueryProcessor = new LLMQueryProcessor();
         Map<String, Object> processedResult = llmQueryProcessor.processQuery(textQuery);
         
@@ -33,9 +35,14 @@ public class QueryTextRetriever {
                 }
             }
         }
+
         for (String celeb : celebrities) {
             System.out.println("Celebrity: " + celeb);
             // get images of that celebrity from postgres
+            List<CelebRecord> celebRecords = pgManager.searchCelebByName(celeb);
+            for (CelebRecord record : celebRecords) {
+                //
+            }
         }
 
         String caption = (String) processedResult.get("caption");
@@ -44,7 +51,7 @@ public class QueryTextRetriever {
         List<Map.Entry<Integer, String>> searchResults = dbManager.fuzzySearchCaptions(textQuery, 4.0f);
         // convert the integer reference id to image name stored in postgres
         List<String> imageNamesCaptionSearch = new ArrayList<>();
-        PostgresDbManager pgManager = new PostgresDbManager();
+        
         for (Map.Entry<Integer, String> entry : searchResults) {
             LabelRecord record = pgManager.getRecordByNumber(entry.getKey());
             if (record != null) {
