@@ -41,7 +41,15 @@ public class PostgresSchemaCreator {
             rsEnum.next();
             boolean enumExists = rsEnum.getBoolean(1);
 
-            if (tableExists && enumExists) {
+            // Check if celeb table exists
+            ResultSet rsCelebTable = stmt.executeQuery(
+                    "SELECT EXISTS (SELECT 1 FROM information_schema.tables " +
+                    "WHERE table_name = 'celeb');"
+            );
+            rsCelebTable.next();
+            boolean celebTableExists = rsCelebTable.getBoolean(1);
+
+            if (tableExists && enumExists && celebTableExists) {
                 System.out.println("Schema already exists. Skipping creation.");
                 return;
             }

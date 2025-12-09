@@ -1,7 +1,7 @@
 package cat.dog.controller;
 
 import cat.dog.dto.Base64Image;
-import cat.dog.repository.LabelDbManager;
+import cat.dog.repository.PostgresDbManager;
 import cat.dog.service.QueryImageRetriever;
 import cat.dog.utility.Base64ImageConverter;
 import cat.dog.dto.Base64ImageResponse;
@@ -36,7 +36,7 @@ public class APIController {
         List<String> resultsBase64 = new java.util.ArrayList<>();
         List<String> sentiments = new java.util.ArrayList<>();
         List<String> filePaths = new java.util.ArrayList<>();
-        LabelDbManager labelDbManager = new LabelDbManager();
+        PostgresDbManager labelDbManager = new PostgresDbManager();
         for (String res : results) {
             LabelRecord record = labelDbManager.getRecordByImageName(res);
             String imagePath = record.getImagePath();
@@ -53,5 +53,9 @@ public class APIController {
         System.out.println("Returning " + responseList.size() + " images.");
         return ResponseEntity.status(HttpStatus.OK)
                 .body(responseList);
+    }
+    @PostMapping("/searchByText")
+    public ResponseEntity<List<Base64ImageResponse>> searchByText(@RequestBody String textQuery) {
+        return null;
     }
 }

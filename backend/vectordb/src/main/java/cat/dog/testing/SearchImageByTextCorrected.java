@@ -3,11 +3,11 @@ package cat.dog.testing;
 import java.util.List;
 
 import cat.dog.dto.LabelRecord;
-import cat.dog.repository.LabelDbManager;
+import cat.dog.repository.PostgresDbManager;
 
 public class SearchImageByTextCorrected {
     public static void main(String[] args) {
-        LabelDbManager dbManager = new LabelDbManager();
+        PostgresDbManager dbManager = new PostgresDbManager();
         List<LabelRecord> records = dbManager.searchByText("Old times! bigbangtheory");
         if (!records.isEmpty()) {
             System.out.println("Records found:\n");

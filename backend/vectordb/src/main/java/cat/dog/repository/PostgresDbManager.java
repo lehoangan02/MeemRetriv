@@ -1,5 +1,6 @@
 package cat.dog.repository;
 
+import cat.dog.dto.CelebRecord;
 import cat.dog.dto.LabelRecord;
 import cat.dog.model.Sentiment;
 import cat.dog.utility.DatabaseConfig;
@@ -13,9 +14,9 @@ import java.sql.Types;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LabelDbManager {
+public class PostgresDbManager {
     
-    public LabelDbManager() {
+    public PostgresDbManager() {
     }
 
     public void insertLabelRecord(LabelRecord record) {
@@ -45,13 +46,51 @@ public class LabelDbManager {
             e.printStackTrace();
         }
     }
-    public boolean hasData() {
+    public void insertCelebRecord(CelebRecord celebRecord) {
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
+        String sql = "INSERT INTO celeb (image_path, celeb_name, classified_integer) " +
+                     "VALUES (?, ?, ?)";
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+            PreparedStatement pstmnt = conn.prepareStatement(sql)) {
+            pstmnt.setString(1, celebRecord.getImagePath());
+            pstmnt.setString(2, celebRecord.getCelebName());
+            pstmnt.setInt(3, celebRecord.getClassifiedInteger());
+            pstmnt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("Error saving celeb to DB: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    public boolean hasLabelData() {
 
         String url = DatabaseConfig.getInstance().getJdbcUrl();
         String user = DatabaseConfig.getInstance().getPostgresUser();
         String password = DatabaseConfig.getInstance().getPostgresPassword();
 
         String sql = "SELECT 1 FROM label LIMIT 1"; // Fast check for any row
+
+        try (Connection conn = DriverManager.getConnection(url, user, password);
+            PreparedStatement pstmt = conn.prepareStatement(sql);
+            ResultSet rs = pstmt.executeQuery()) {
+
+            return rs.next(); // Returns true if at least one row exists
+
+        } catch (SQLException e) {
+            // If the table doesn't exist, this throws an error. 
+            // We assume false (no data) or handle accordingly.
+            System.err.println("Check failed (Table might not exist): " + e.getMessage());
+            return false;
+        }
+    }
+    public boolean hasCelebData() {
+        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String user = DatabaseConfig.getInstance().getPostgresUser();
+        String password = DatabaseConfig.getInstance().getPostgresPassword();
+
+        String sql = "SELECT 1 FROM celeb LIMIT 1"; // Fast check for any row
 
         try (Connection conn = DriverManager.getConnection(url, user, password);
             PreparedStatement pstmt = conn.prepareStatement(sql);
@@ -120,14 +159,14 @@ public class LabelDbManager {
 
         // --- NEW SANITIZATION STEP ---
         // 1. Remove anything that is NOT a letter (a-z), number (0-9), or space.
-        //    The ^ inside [] means "Not". So [^a-zA-Z0-9\\s] means "Not alphanumeric or space".
-        String cleanQuery = userQuery.replaceAll("[^a-zA-Z0-9\\s]", "");
+        //    The ^ inside [] means "Not". So [^a-zA-Z0-9\s] means "Not alphanumeric or space".
+        String cleanQuery = userQuery.replaceAll("[^a-zA-Z0-9\s]", "");
         
         // 2. NOW add the OR pipes to the clean text
         //    Input: "Old times! bigbangtheory"
         //    Clean: "Old times bigbangtheory"
         //    Final: "Old | times | bigbangtheory"
-        String formattedQuery = cleanQuery.trim().replaceAll("\\s+", " | ");
+        String formattedQuery = cleanQuery.trim().replaceAll("\s+", " | ");
 
         // Check if the query became empty after cleaning (e.g. user entered "!!!")
         if (formattedQuery.isEmpty()) {
@@ -172,4 +211,5 @@ public class LabelDbManager {
 
         return results;
     }
+
 }
