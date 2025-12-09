@@ -45,4 +45,10 @@ public class DatabaseConfig {
     public String getWeviateUrl() {
         return wevivate_url;
     }
+
+    // Class fields to hold elasticsearch configuration
+    private final String elasticsearch_url = "http://localhost:9200";
+    public String getElasticsearchUrl() {
+        return elasticsearch_url;
+    }
 }

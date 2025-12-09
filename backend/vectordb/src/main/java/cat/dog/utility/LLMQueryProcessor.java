@@ -104,7 +104,7 @@ public class LLMQueryProcessor {
     // ==========================================
     public static void main(String[] args) {
         LLMQueryProcessor processor = new LLMQueryProcessor();
-        String testQuery = "Meme about Tom Hanks and Leonardo DiCaprio having a coffee together. The caption reads: \"Actors just want to chill.\"\n";
+        String testQuery = "PERFECTLY HEALTHY GIVES BILLIONS TO CURE DISEASE KEEPS BILLIONS DIES OF CANCER";
 
         System.out.println("--------------------------------------------------");
         System.out.println("Starting Test...");

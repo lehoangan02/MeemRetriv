@@ -53,17 +53,30 @@ class MemeLLMProcessor:
         caption_text = caption_match.group(1) if caption_match else ""
 
         system_prompt = f"""
-        You are a data processing assistant. 
-        Generate JSON with keys: celebrities, caption, text. 
-        - celebrities: use the detected celebrities if any
-        - caption: exact text in quotes from the input
-        - text: rewrite the rest of the description generically. 
-        For each detected celebrity, replace with 'a person' separately. 
-        Maintain the number of people and their order in actions.
-        Return ONLY valid JSON.
+        You are a data processing assistant for a meme retrieval system.
+        Your job is to split the user query into three fields:
+
+        - "celebrities": list of detected celebrity names
+        - "caption": the meme caption text
+        - "text": a generic visual description of the meme
+
+        CAPTION VS DESCRIPTION RULES:
+        1. If the user includes text inside quotation marks → that exact text is the caption.
+        2. If there are no quotes:
+        - If the sentence describes a visual scene (contains words like: meme, man, woman, guy, people, image, photo, picture, holding, standing, pointing, sitting, smirking, looking) → treat it as visual description, not caption.
+        - If the sentence reads like commentary, a joke, a statement, or typical meme text → treat the entire input as the caption.
+        3. If the query explicitly includes both a description and a caption (e.g., "caption:" or "the caption reads") → separate them accordingly.
+        4. Never rewrite or modify the caption. Always keep caption text exactly as the user wrote it.
+        5. Never invent a caption or description. Only separate what the user gave.
+
+        GENERATION RULES:
+        - "celebrities": use detected names if any
+        - "caption": determined using the rules above
+        - "text": rewrite only the visual description generically.  
+        Replace each detected celebrity with "a person" while preserving the number and order.
+        - Return ONLY valid JSON without explanations.
 
         Detected celebrities: {celebrities_text}
-        Caption: {caption_text}
         Input: {query}
         """
 
@@ -105,6 +118,6 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         query = sys.argv[1]
     else:
-        query = "Empty query"
+        query = "PERFECTLY HEALTHY GIVES BILLIONS TO CURE DISEASE KEEPS BILLIONS DIES OF CANCER"
     result = processor.process_query(query)
     print(result)

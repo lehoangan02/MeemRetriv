@@ -50,6 +50,12 @@ public class MemeVectorImporter {
         }
 
         HttpClient client = HttpClient.newHttpClient();
+
+        if (doesClassHaveObjects(client, className)) {
+            System.out.println("INFO: Class '" + className + "' already contains vectors. Skipping import.");
+            return;
+        }
+
         Path startPath = Paths.get(embeddingsDir);
 
         if (!Files.exists(startPath)) {
@@ -76,6 +82,50 @@ public class MemeVectorImporter {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private static boolean doesClassHaveObjects(HttpClient client, String className) {
+        try {
+            String graphqlUrl = DatabaseConfig.getInstance().getWeviateUrl() + "/graphql";
+            
+            // 1. Construct the GraphQL query payload
+            // query: "{ Aggregate { YourClassName { meta { count } } } }"
+            String query = String.format("{ Aggregate { %s { meta { count } } } }", className);
+            
+            // 2. Wrap it in a JSON object: { "query": "..." }
+            String jsonPayload = String.format("{\"query\": \"%s\"}", query);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(graphqlUrl))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 200) {
+                String body = response.body();
+                
+                // 3. Extract the count using Regex
+                // Matches: "count": 6991 (ignoring whitespace)
+                java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\"count\"\\s*:\\s*(\\d+)");
+                java.util.regex.Matcher matcher = pattern.matcher(body);
+                
+                if (matcher.find()) {
+                    int count = Integer.parseInt(matcher.group(1));
+                    System.out.println("INFO: Existing count for class '" + className + "' is " + count);
+                    return count > 0;
+                }
+            } else {
+                 // If the class doesn't exist, Weaviate might return a 200 with errors in the body
+                 // or a different status code depending on version.
+                 // If we can't get a 200 OK with a count, we assume it's safe to try importing.
+                 System.out.println("DEBUG: Failed to get count (Status " + response.statusCode() + "). Body: " + response.body());
+            }
+        } catch (Exception e) {
+            System.err.println("Warning: Could not check object count. Proceeding with caution. Error: " + e.getMessage());
+        }
+        return false;
     }
 
     private static boolean setupVirtualEnv() {

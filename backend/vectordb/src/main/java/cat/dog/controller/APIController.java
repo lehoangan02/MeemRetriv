@@ -3,6 +3,7 @@ package cat.dog.controller;
 import cat.dog.dto.Base64Image;
 import cat.dog.repository.PostgresDbManager;
 import cat.dog.service.QueryImageRetriever;
+import cat.dog.service.QueryTextRetriever;
 import cat.dog.utility.Base64ImageConverter;
 import cat.dog.dto.Base64ImageResponse;
 import cat.dog.dto.LabelRecord;
@@ -56,6 +57,9 @@ public class APIController {
     }
     @PostMapping("/searchByText")
     public ResponseEntity<List<Base64ImageResponse>> searchByText(@RequestBody String textQuery) {
+        System.out.println("Received text query: " + textQuery);
+        QueryTextRetriever retriever = QueryTextRetriever.getInstance();
+        retriever.retrieveSimilarImages(textQuery, 0);
         return null;
     }
 }
