@@ -1,3 +1,4 @@
+import sys
 import os
 import multiprocessing
 
@@ -95,8 +96,15 @@ if __name__ == "__main__":
     # query = """
     # Meme about Tom Hanks and Leonardo DiCaprio having a coffee together. The caption reads: "Actors just want to chill."
     # """
-    query = """
-    A woman is handing a gift to a man, while another woman is taking a photo. The caption reads: "Memories captured forever."
-    """
+    # query = """
+    # A woman is handing a gift to a man, while another woman is taking a photo. The caption reads: "Memories captured forever."
+    # """
+    # query = """
+    # Obama giving Obama a medal.
+    # """
+    if len(sys.argv) > 1:
+        query = sys.argv[1]
+    else:
+        query = "Empty query"
     result = processor.process_query(query)
     print(result)

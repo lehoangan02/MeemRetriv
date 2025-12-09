@@ -14,4 +14,10 @@ CREATE TABLE label (
     text_ocr TEXT,
     text_corrected TEXT,
     overall_sentiment sentiment_level
-)
+);
+CREATE TABLE celeb (
+    id SERIAL PRIMARY KEY,
+    image_path TEXT,
+    celeb_name VARCHAR(255),
+    classified_integer INT
+);

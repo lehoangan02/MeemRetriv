@@ -1,11 +1,11 @@
 package cat.dog.testing;
 
 import cat.dog.dto.LabelRecord;
-import cat.dog.repository.LabelDbManager;
+import cat.dog.repository.PostgresDbManager;
 
 public class SearchImageByName {
     public static void main(String[] args) {
-        LabelDbManager dbManager = new LabelDbManager();
+        PostgresDbManager dbManager = new PostgresDbManager();
         LabelRecord record = dbManager.getRecordByImageName("image_292.jpg");
         if (record != null) {
             System.out.println("Record found:\n");

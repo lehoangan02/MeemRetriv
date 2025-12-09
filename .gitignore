@@ -217,3 +217,4 @@ backend/vectordb/models/mobileclip_s0.pt
 /DATA/extracted_faces
 *.pt
 *.onnx
+/DATA/celebrity_images_by_name
