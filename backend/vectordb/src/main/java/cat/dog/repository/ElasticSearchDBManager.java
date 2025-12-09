@@ -166,6 +166,123 @@ public class ElasticSearchDBManager {
         System.out.println("Finished importing " + celebNames.size() + " celebrity names.");
     }
 
+    public List<String> fuzzySearchCelebNames(String query, float minScore) {
+        List<String> results = new java.util.ArrayList<>();
+        String indexName = "celebrities";
+        String url = DatabaseConfig.getInstance().getElasticsearchUrl();
+
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+
+            String jsonBody = """
+            {
+            "query": {
+                "match": {
+                "name": {
+                    "query": "%s",
+                    "fuzziness": "AUTO"
+                }
+                }
+            }
+            }
+            """.formatted(query.replace("\"", "\\\""));
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url + "/" + indexName + "/_search"))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                System.out.println("Search failed: " + response.body());
+                return results;
+            }
+
+            String body = response.body();
+
+            // Parse hits array manually (simple string parse)
+            String[] parts = body.split("\"hits\":\\s*\\[");
+            if (parts.length < 2) return results;
+
+            String hitsSection = parts[1].split("]")[0];
+
+            String[] hitEntries = hitsSection.split("\\},\\s*\\{");
+
+            for (String entry : hitEntries) {
+                // Extract score
+                int scoreIndex = entry.indexOf("\"_score\"");
+                if (scoreIndex == -1) continue;
+
+                String afterScore = entry.substring(scoreIndex + 8).trim();
+                String scoreStr = afterScore.split(",")[0].replaceAll("[^0-9\\.]", "");
+                float score = Float.parseFloat(scoreStr);
+
+                if (score < minScore) continue;
+
+                // Extract name
+                int nameIndex = entry.indexOf("\"name\"");
+                if (nameIndex == -1) continue;
+
+                String afterName = entry.substring(nameIndex + 6).trim();
+                String nameValue = afterName.split(":")[1]
+                    .trim()
+                    .replaceAll("[\"}]", "")
+                    .trim();
+
+                results.add(nameValue);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return results;
+    }
+
+    public void addCaptionIndex() {
+        String indexName = "captions";
+        
+        // Optional: Check if it exists first to avoid errors
+        if (checkIfIndexExists(indexName)) {
+            System.out.println("Index " + indexName + " already exists. Skipping creation.");
+            return;
+        }
+
+        String url = DatabaseConfig.getInstance().getElasticsearchUrl();
+
+        String jsonBody = """
+        {
+          "mappings": {
+            "properties": {
+              "caption": { "type": "text" },
+              "ref_id": { "type": "integer" }
+            }
+          }
+        }
+        """;
+
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(url + "/" + indexName))
+                    .header("Content-Type", "application/json")
+                    .PUT(HttpRequest.BodyPublishers.ofString(jsonBody))
+                    .build();
+
+            HttpResponse<String> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            System.out.println("Create " + indexName + " index response: " + response.body());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void main(String[] args) {
         String indexName = "celebrities";
         // boolean exists = checkIfIndexExists(indexName);
@@ -181,6 +298,8 @@ public class ElasticSearchDBManager {
         //     System.out.println("Index " + indexName + " has no documents.");
         // }
         // addCelebIndex();
-        importCelebNames();
+        // importCelebNames();
+        // List<String> results = fuzzySearchCelebNames("Obama", 6.0f);
+        // System.out.println("Fuzzy search results for 'Obama': " + results);
     }
 }
