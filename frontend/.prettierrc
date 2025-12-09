@@ -1,9 +1,9 @@
 {
   "plugins": ["prettier-plugin-tailwindcss"],
-  "tabWidth": 2,
+  "tailwindStylesheet": "./src/index.css",
   "trailingComma": "all",
-  "endOfLine": "lf",
-  "semi": true,
   "singleQuote": false,
-  "tailwindStylesheet": "./src/index.css"
+  "semi": true,
+  "tabWidth": 2,
+  "tailwindPreserveDuplicates": true
 }
