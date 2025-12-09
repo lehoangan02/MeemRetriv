@@ -1,4 +1,6 @@
-# Frontend
+# Meme Retrieval Web Application
 
-npm ci
+```bash
+npm install
 npm run dev
+```
