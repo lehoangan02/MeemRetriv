@@ -39,6 +39,20 @@ public class QueryTextRetriever {
         String text = (String) processedResult.get("text");
         List<String> imageNamesDescriptiveTextSearch = MemeSearcher.searchByText(text, "MemeImageCleaned", null);
         
+        // [Debug] Print intermediate results
+        System.out.println("Face Search Results:");
+        for (String imageName : imageNamesFaceSearch) {
+            System.out.println(imageName);
+        }
+        System.out.println("Caption Search Results:");
+        for (String imageName : imageNamesMemeCaptionSearch) {
+            System.out.println(imageName);
+        }
+        System.out.println("Descriptive Text Search Results:");
+        for (String imageName : imageNamesDescriptiveTextSearch) {
+            System.out.println(imageName);
+        }
+
         // weighted merging of results
         float faceWeight = 0.3f;
         float captionWeight = 0.3f;
