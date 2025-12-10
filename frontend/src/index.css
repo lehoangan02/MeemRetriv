@@ -13,7 +13,8 @@
     retro,
     lofi,
     forest,
-    sunset;
+    sunset,
+    valentine;
 }
 
 @custom-variant dark (&:where(

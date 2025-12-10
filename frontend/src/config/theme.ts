@@ -9,10 +9,11 @@ export const themes = [
   "sunset",
   "lemonade",
   "luxury",
+  "valentine",
 ] as const;
 
 export const themeLabels = themes.map(
   (theme) => theme.charAt(0).toUpperCase() + theme.slice(1),
 );
 
-export type Themes = (typeof themes)[number];
+export type Theme = (typeof themes)[number];
