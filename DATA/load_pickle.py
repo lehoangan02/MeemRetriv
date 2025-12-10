@@ -1,7 +1,7 @@
 import pickle
 
 # Load the pickle file
-with open('meme_face_embeddings_mobileclip.pkl', 'rb') as f:
+with open('celebrity_clip_vectors.pkl', 'rb') as f:
     data = pickle.load(f)
 
 # Inspect the structure

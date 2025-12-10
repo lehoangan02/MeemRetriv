@@ -11,6 +11,7 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import cat.dog.dto.CelebEmbedding;
 import cat.dog.utility.ClipEmbedder;
 import cat.dog.utility.DatabaseConfig;
 
@@ -23,20 +24,33 @@ public class CelebFaceSearcher {
         String queryImagePath = "./received_images/leonardo_di_caprio.jpg";
         
         System.out.println("Searching for similar celebrity faces...");
-        List<String> results = searchByImage(queryImagePath, null);
-        for (String result : results) {
-            System.out.println(result);
+        
+        // Return type is now List<CelebEmbedding>
+        List<CelebEmbedding> results = searchByImage(queryImagePath, null);
+        
+        for (CelebEmbedding result : results) {
+            System.out.println("Found: " + result.getCelebName() + " | Path: " + result.getImagePath());
         }
     }
+    public static List<CelebEmbedding> getEmbeddingsByName(String celebName) {
+        // Weaviate GraphQL 'where' filter for exact string matching
+        // Note the triple backslashes (\\\"%s\\\") needed to escape quotes inside the JSON query string
+        String graphqlQuery = String.format(
+            "{ \"query\": \"{ Get { %s(where: {path: [\\\"name\\\"], operator: Equal, valueString: \\\"%s\\\"}) { name filePath _additional { vector } } } }\" }",
+            CLASS_NAME,
+            celebName
+        );
 
-    public static List<String> searchByImage(String imagePath, Map<String, String> filters) {
+        return executeSearch(graphqlQuery);
+    }
+    public static List<CelebEmbedding> searchByImage(String imagePath, Map<String, String> filters) {
         File imageFile = new File(imagePath);
         if (!imageFile.exists()) {
             System.err.println("Error: Image file does not exist at " + imagePath);
             return new ArrayList<>();
         }
 
-        // Using the existing ClipEmbedder as requested
+        // Using the existing ClipEmbedder
         String vectorString = ClipEmbedder.embedImage(imagePath);
 
         if (vectorString == null) {
@@ -49,16 +63,15 @@ public class CelebFaceSearcher {
         return executeSearch(graphqlQuery);
     }
     
-
     private static String buildWeaviateQuery(String vectorJson, Map<String, String> filters) {
         String filterString = "";
         if (filters != null && !filters.isEmpty()) {
             filterString = buildFilters(filters);
         }
         
-        // We fetch both 'name' and 'filePath' as per your schema
+        // UPDATED: Added 'vector' to the _additional block to fetch the embedding
         return String.format(
-            "{ \"query\": \"{ Get { %s(nearVector: {vector: %s} limit: 10 %s) { name filePath _additional { distance } } } }\" }",
+            "{ \"query\": \"{ Get { %s(nearVector: {vector: %s} limit: 10 %s) { name filePath _additional { distance vector } } } }\" }",
             CLASS_NAME,
             vectorJson,
             filterString
@@ -70,9 +83,9 @@ public class CelebFaceSearcher {
         throw new UnsupportedOperationException("Unimplemented method 'buildFilters'");
     }
     
-    private static List<String> executeSearch(String jsonPayload) {
+    private static List<CelebEmbedding> executeSearch(String jsonPayload) {
         final String WEAVIATE_URL = DatabaseConfig.getInstance().getWeviateUrl() + "/graphql";
-        List<String> results = new ArrayList<>();
+        List<CelebEmbedding> results = new ArrayList<>();
 
         try {
             HttpClient client = HttpClient.newHttpClient();
@@ -84,27 +97,41 @@ public class CelebFaceSearcher {
 
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             
-            System.out.println(formatJson(response.body())); // Uncomment for debugging
+            // System.out.println(formatJson(response.body())); // Uncomment for debugging
 
             if (response.statusCode() == 200) {
                 JSONObject obj = new JSONObject(response.body());
                 
                 // Navigate to: data -> Get -> CelebFaceEmbeddings
                 if (obj.has("data") && !obj.isNull("data")) {
-                    JSONArray items = obj.getJSONObject("data")
-                                        .getJSONObject("Get")
-                                        .optJSONArray(CLASS_NAME);
+                    JSONObject data = obj.getJSONObject("data");
+                    if (data.has("Get") && !data.isNull("Get")) {
+                        JSONArray items = data.getJSONObject("Get").optJSONArray(CLASS_NAME);
 
-                    if (items != null) {
-                        for (int i = 0; i < items.length(); i++) {
-                            JSONObject item = items.getJSONObject(i);
-                            
-                            String name = item.optString("name", "Unknown");
-                            String path = item.optString("filePath", "");
-                            
-                            // You can format this string however your frontend expects it
-                            // e.g., "Brad Pitt|/images/brad.jpg"
-                            results.add(name + " : " + path);
+                        if (items != null) {
+                            for (int i = 0; i < items.length(); i++) {
+                                JSONObject item = items.getJSONObject(i);
+                                
+                                String name = item.optString("name", "Unknown");
+                                String path = item.optString("filePath", "");
+
+                                // Extract the vector from _additional
+                                String[] embeddingArray = new String[0];
+                                if (item.has("_additional")) {
+                                    JSONObject additional = item.getJSONObject("_additional");
+                                    if (additional.has("vector")) {
+                                        JSONArray vectorJson = additional.getJSONArray("vector");
+                                        embeddingArray = new String[vectorJson.length()];
+                                        for (int j = 0; j < vectorJson.length(); j++) {
+                                            // Convert float/double to String to match DTO
+                                            embeddingArray[j] = String.valueOf(vectorJson.get(j));
+                                        }
+                                    }
+                                }
+
+                                // Create DTO and add to list
+                                results.add(new CelebEmbedding(name, path, embeddingArray));
+                            }
                         }
                     }
                 }

@@ -66,6 +66,8 @@ public class LLMQueryProcessor {
             // 5. Clean and Parse JSON
             String jsonString = extractJsonString(output);
 
+            System.out.println("Extracted JSON: " + jsonString);
+
             return objectMapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
 
         } catch (Exception e) {

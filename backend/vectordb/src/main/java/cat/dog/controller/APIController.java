@@ -59,7 +59,7 @@ public class APIController {
     public ResponseEntity<List<Base64ImageResponse>> searchByText(@RequestBody String textQuery) {
         System.out.println("Received text query: " + textQuery);
         QueryTextRetriever retriever = QueryTextRetriever.getInstance();
-        retriever.retrieveSimilarImages(textQuery, 0);
+        List<String> results = retriever.retrieveSimilarImages(textQuery, 10);
         return null;
     }
 }

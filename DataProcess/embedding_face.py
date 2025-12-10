@@ -72,11 +72,10 @@ def generate_mobileclip_embeddings(paths, description, model, preprocess):
     Processes images and returns a LIST of dictionaries:
     [{'label': 'Name', 'path': '...', 'vector': array}, ...]
     """
-    embeddings_list = []  # Changed from dict {} to list []
+    embeddings_list = []
     
     BATCH_SIZE = 32
     
-    # Use 'with' to manage the progress bar manually for accurate image counts
     with tqdm(total=len(paths), desc=description, unit="img") as pbar:
         for i in range(0, len(paths), BATCH_SIZE):
             batch_paths = paths[i:i + BATCH_SIZE]
@@ -95,34 +94,30 @@ def generate_mobileclip_embeddings(paths, description, model, preprocess):
                     print(f"Skipping {p}: {e}")
                     continue
             
-            # If entire batch failed, skip
             if not batch_tensors:
                 pbar.update(len(batch_paths))
                 continue
 
             try:
-                # Stack and Encode
                 input_tensor = torch.stack(batch_tensors).to(DEVICE)
                 
                 with torch.no_grad():
                     image_features = model.encode_image(input_tensor)
                 
-                # Normalize
                 image_features /= image_features.norm(dim=-1, keepdim=True)
-                
-                # Convert to NumPy
                 numpy_features = image_features.cpu().numpy().astype(np.float32)
                 
-                # --- NEW LOGIC: Create Dictionary Object ---
                 for path, feature in zip(valid_paths_in_batch, numpy_features):
                     
-                    # Extract Label (Parent folder name)
-                    # e.g., .../Aaron_Eckhart/001.jpg -> Aaron_Eckhart
                     label = os.path.basename(os.path.dirname(path))
+                    
+                    # --- CHANGE HERE: Adjust path level ---
+                    # Converts "./../DATA/..." -> "./../../DATA/..."
+                    saved_path = path.replace("./../DATA", "./../../DATA")
                     
                     entry = {
                         "label": label,
-                        "path": path,
+                        "path": saved_path, 
                         "vector": feature
                     }
                     embeddings_list.append(entry)
@@ -130,7 +125,6 @@ def generate_mobileclip_embeddings(paths, description, model, preprocess):
             except Exception as e:
                 print(f"Batch processing error: {e}")
             
-            # Update progress bar
             pbar.update(len(batch_paths))
 
     return embeddings_list

@@ -18,7 +18,7 @@ public class ExtractedFaceSearcher {
 
     private static final String CLASS_NAME = "ExtractedFaceEmbeddings";
 
-    public List<MemeFaceRecord> searchFace(String filePath, int limit) {
+    public static List<MemeFaceRecord> searchFace(String filePath, int limit) {
         File imgFile = new File(filePath);
         if (!imgFile.exists()) {
             System.err.println("Error: File does not exist -> " + filePath);
@@ -46,7 +46,7 @@ public class ExtractedFaceSearcher {
         return searchWeaviate(vectorStr, limit);
     }
 
-    private List<MemeFaceRecord> searchWeaviate(String vectorStr, int limit) {
+    private static List<MemeFaceRecord> searchWeaviate(String vectorStr, int limit) {
         List<MemeFaceRecord> results = new ArrayList<>();
         try {
             HttpClient client = HttpClient.newHttpClient();
@@ -81,7 +81,7 @@ public class ExtractedFaceSearcher {
         return results;
     }
 
-    private List<MemeFaceRecord> parseResponse(String jsonResponse) {
+    private static List<MemeFaceRecord> parseResponse(String jsonResponse) {
         List<MemeFaceRecord> records = new ArrayList<>();
         
         // Improved Parsing: 
@@ -107,7 +107,7 @@ public class ExtractedFaceSearcher {
     }
 
     // Helper to extract a single value by key from a JSON snippet
-    private String extractValue(String jsonSnippet, String key) {
+    private static String extractValue(String jsonSnippet, String key) {
         // Matches: "key" : "value"
         Pattern p = Pattern.compile("\"" + key + "\"\\s*:\\s*\"(.*?)\"");
         Matcher m = p.matcher(jsonSnippet);

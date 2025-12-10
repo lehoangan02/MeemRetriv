@@ -1,8 +1,13 @@
 package cat.dog.utility;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Service responsible for generating MobileCLIP embeddings for images and text.
@@ -103,6 +108,125 @@ public class ClipEmbedder {
      */
     public static String embedImage(String imagePath) {
         return embedImage(imagePath, null);
+    }
+    public static List<String> embedImageBatch(List<String> imagePaths) {
+        List<String> results = new ArrayList<>();
+        File ckptFile = new File(CHECKPOINT_FILE);
+        
+        if (!ckptFile.exists()) {
+            System.err.println("ClipEmbedder Error: Model checkpoint not found at " + ckptFile.getAbsolutePath());
+            // Fill with nulls to match size
+            for (int i = 0; i < imagePaths.size(); i++) results.add(null);
+            return results;
+        }
+
+        File tempInputFile = null;
+        try {
+            // 1. Write paths to temp file to avoid CLI arguments limit
+            tempInputFile = File.createTempFile("batch_req", ".json");
+            String jsonContent = imagePaths.stream()
+                .map(path -> "\"" + path.replace("\\", "\\\\") + "\"")
+                .collect(Collectors.joining(",", "[", "]"));
+                
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(tempInputFile))) {
+                writer.write(jsonContent);
+            }
+
+            String ckptPath = ckptFile.getAbsolutePath().replace("\\", "\\\\");
+            String inputJsonPath = tempInputFile.getAbsolutePath().replace("\\", "\\\\");
+
+            // 2. Python Script
+            // We print "BATCH_RES|..." for success or "BATCH_ERR|..." for failure
+            // ensuring we print exactly one line per input item.
+            String pythonScript = 
+                "import torch, mobileclip, json, os, sys\n" +
+                "import numpy as np\n" +
+                "from PIL import Image\n" +
+                "\n" +
+                "def get_device():\n" +
+                "    if torch.cuda.is_available(): return 'cuda'\n" +
+                "    if torch.backends.mps.is_available(): return 'mps'\n" +
+                "    return 'cpu'\n" +
+                "\n" +
+                "try:\n" +
+                "    device = get_device()\n" +
+                "    checkpoint_path = '" + ckptPath + "'\n" +
+                "    # Load Model Once\n" +
+                "    model, _, preprocess = mobileclip.create_model_and_transforms('mobileclip_s0', pretrained=checkpoint_path)\n" +
+                "    model.to(device)\n" +
+                "    model.eval()\n" +
+                "\n" +
+                "    with open('" + inputJsonPath + "', 'r') as f:\n" +
+                "        image_paths = json.load(f)\n" +
+                "\n" +
+                "    # Loop and ensure output order matches input order\n" +
+                "    for img_path in image_paths:\n" +
+                "        try:\n" +
+                "            if not os.path.exists(img_path):\n" +
+                "                raise FileNotFoundError(f'{img_path} not found')\n" +
+                "\n" +
+                "            image = Image.open(img_path).convert('RGB')\n" +
+                "            image_tensor = preprocess(image).unsqueeze(0).to(device)\n" +
+                "\n" +
+                "            with torch.no_grad():\n" +
+                "                features = model.encode_image(image_tensor)\n" +
+                "                features /= features.norm(dim=-1, keepdim=True)\n" +
+                "\n" +
+                "            # Success: Print Vector\n" +
+                "            vec_str = json.dumps(features.cpu().numpy().flatten().tolist())\n" +
+                "            print(f'BATCH_RES|{vec_str}', flush=True)\n" +
+                "\n" +
+                "        except Exception as inner_e:\n" +
+                "            # Failure: Print Error Marker\n" +
+                "            # We print the error to stderr for logs, but BATCH_ERR to stdout for Java logic\n" +
+                "            sys.stderr.write(f'Skipping {img_path}: {inner_e}\\n')\n" +
+                "            print('BATCH_ERR|NULL', flush=True)\n" +
+                "\n" +
+                "except Exception as e:\n" +
+                "    # Fatal script error\n" +
+                "    print(f'FATAL|{e}', flush=True)";
+
+            // 3. Execute and Parse
+            ProcessBuilder pb = new ProcessBuilder(PYTHON_EXEC, "-c", pythonScript);
+            // We do NOT redirectErrorStream(true) here because we want to separate 
+            // the JSON data (stdout) from the noise/logs (stderr) if possible, 
+            // but for simplicity in this helper we often merge them. 
+            // Let's merge them but parse carefully.
+            pb.redirectErrorStream(true); 
+            Process process = pb.start();
+
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("BATCH_RES|")) {
+                    // Success: Add vector string
+                    results.add(line.substring("BATCH_RES|".length()));
+                } else if (line.startsWith("BATCH_ERR|")) {
+                    // Failure: Add null to maintain index alignment
+                    results.add(null);
+                } else if (line.startsWith("FATAL|")) {
+                    System.err.println("Python Critical Error: " + line);
+                } else {
+                    // Debug logs from python (optional)
+                    // System.out.println("[PyLog] " + line);
+                }
+            }
+            
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (tempInputFile != null && tempInputFile.exists()) {
+                tempInputFile.delete();
+            }
+        }
+        
+        // Safety: Ensure result list is same size as input list
+        // (In case Python crashed halfway through)
+        while (results.size() < imagePaths.size()) {
+            results.add(null);
+        }
+
+        return results;
     }
 
     /**

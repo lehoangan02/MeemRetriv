@@ -15,3 +15,4 @@ public class CelebRecord {
     public String getCelebName() { return celebName; }
     public int getClassifiedInteger() { return classifiedInteger; }
 }
+

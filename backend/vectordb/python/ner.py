@@ -29,7 +29,7 @@ class GLiNER_Person_Entity_Prediction:
             if entity["label"] == "celebrity"
         ]
         
-        print("Predicted Entities (Raw):", entities)
+        # print("Predicted Entities (Raw):", entities)
         return celebrities
 
 if __name__ == "__main__":
