@@ -41,14 +41,14 @@ public class QueryTextRetriever {
             // get images of that celebrity from postgres
             List<CelebRecord> celebRecords = pgManager.searchCelebByName(celeb);
             for (CelebRecord record : celebRecords) {
-                //
+                
             }
         }
 
         String caption = (String) processedResult.get("caption");
         System.out.println("Caption: " + caption);
         ElasticSearchDBManager dbManager = ElasticSearchDBManager.getInstance();
-        List<Map.Entry<Integer, String>> searchResults = dbManager.fuzzySearchCaptions(textQuery, 4.0f);
+        List<Map.Entry<Integer, String>> searchResults = dbManager.fuzzySearchCaptions(textQuery, 5.0f);
         // convert the integer reference id to image name stored in postgres
         List<String> imageNamesCaptionSearch = new ArrayList<>();
         

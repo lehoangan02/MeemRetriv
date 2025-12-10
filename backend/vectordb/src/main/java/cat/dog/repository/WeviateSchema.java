@@ -13,6 +13,7 @@ public class WeviateSchema {
         createWeviateClass("MemeImage", "A meme image's precomputed CLIP vector");
         createWeviateClass("MemeImageCleaned", "A meme image without text and its precomputed CLIP vector");
         createCelebFacePickleSchema("CelebFaceEmbeddings", "An embedding of a celebrity's face");
+        createExtractedFaceSchema("ExtractedFaceEmbeddings", "An embedding of an extracted face from a meme image");
     }
 
     public static void createWeviateClass(String className, String description) throws Exception {
