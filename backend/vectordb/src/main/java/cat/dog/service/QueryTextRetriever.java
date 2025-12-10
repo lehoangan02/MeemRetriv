@@ -30,15 +30,33 @@ public class QueryTextRetriever {
     public List<String> retrieveSimilarImages(String textQuery, int topK) {
         PostgresDbManager pgManager = new PostgresDbManager();
         LLMQueryProcessor llmQueryProcessor = new LLMQueryProcessor();
+
+        long totalStart = System.currentTimeMillis();
+
+        long start = System.currentTimeMillis();
         Map<String, Object> processedResult = llmQueryProcessor.processQuery(textQuery);
+        long end = System.currentTimeMillis();
+        System.out.println("LLM Processing took: " + (end - start) + " ms");
 
+        start = System.currentTimeMillis();
         List<String> imageNamesFaceSearch = retrieveBaseOnFaceMatch(processedResult);
+        end = System.currentTimeMillis();
+        System.out.println("Face Search took: " + (end - start) + " ms");
 
+        start = System.currentTimeMillis();
         List<String> imageNamesMemeCaptionSearch = retrieveBaseOnCaptionSearch(processedResult);
+        end = System.currentTimeMillis();
+        System.out.println("Caption Search took: " + (end - start) + " ms");
 
+        start = System.currentTimeMillis();
         String text = (String) processedResult.get("text");
         List<String> imageNamesDescriptiveTextSearch = MemeSearcher.searchByText(text, "MemeImageCleaned", null);
-        
+        end = System.currentTimeMillis();
+        System.out.println("Descriptive Text Search took: " + (end - start) + " ms");
+
+        long totalEnd = System.currentTimeMillis();
+        System.out.println("Total retrieveSimilarImages execution time: " + (totalEnd - totalStart) + " ms");
+
         // [Debug] Print intermediate results
         System.out.println("Face Search Results:");
         for (String imageName : imageNamesFaceSearch) {
