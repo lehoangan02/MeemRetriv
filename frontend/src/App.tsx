@@ -10,7 +10,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <div className="relative flex min-h-dvh w-full flex-col">
         <AppHeader className="sticky top-0 left-0 w-full bg-base-300" />
-        <main className="flex-1 basis-1 overflow-y-auto scrollbar-stable-both">
+        <main className="flex-1 shrink-0 basis-1 overflow-y-auto scrollbar-stable-both">
           <div className="h-full w-full">
             <ImageUploader />
           </div>

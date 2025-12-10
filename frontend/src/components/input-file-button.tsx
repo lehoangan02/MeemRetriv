@@ -1,10 +1,5 @@
 import React, { type ChangeEventHandler } from "react";
-import {
-  LinkIcon,
-  FilePlusIcon,
-  FolderOpenIcon,
-  ChevronDownIcon,
-} from "lucide-react";
+import { LinkIcon, FilePlusIcon, FolderOpenIcon, MenuIcon } from "lucide-react";
 
 interface InputFileButtonProps {
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -38,17 +33,17 @@ export default function InputFileButton({
         onChange={handleFileChange}
       />
 
-      <div className="dropdown dropdown-end">
+      <div className="dropdown dropdown-right dropdown-end">
         <div
           tabIndex={0}
           role="button"
           className="btn join-item h-full btn-primary"
         >
-          <ChevronDownIcon />
+          <MenuIcon />
         </div>
         <ul
           tabIndex={-1}
-          className="dropdown-content menu z-1 mt-1 min-w-56 rounded-box bg-primary px-1 py-2 text-primary-content shadow-xl"
+          className="dropdown-content menu z-1 ml-1 min-w-56 rounded-box bg-primary px-1 py-2 text-primary-content shadow-xl"
         >
           <li>
             <button className="inline-flex items-center gap-2 px-4 py-3 leading-none">

@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { ImageOff, XIcon, FileImage } from "lucide-react";
+import { ImageOff, XIcon, FileImage, SearchIcon } from "lucide-react";
 import React, { useMemo } from "react";
 
 interface ImagePreviewProps {
@@ -16,7 +16,8 @@ export default function ImagePreview({
   fileSize,
   onRemove,
   onSelectImage,
-}: ImagePreviewProps) {
+  className,
+}: ImagePreviewProps & React.ComponentProps<"div">) {
   const formattedSize = useMemo(() => {
     if (!fileSize) return null;
     if (fileSize < 1024) return `${fileSize} B`;
@@ -24,24 +25,17 @@ export default function ImagePreview({
     return `${(fileSize / (1024 * 1024)).toFixed(2)} MB`;
   }, [fileSize]);
 
-  if (!imageSrc) return <EmptyImagePreview onClick={onSelectImage} />;
+  if (!imageSrc)
+    return <EmptyImagePreview className={className} onClick={onSelectImage} />;
 
   return (
     <div
       className={cn(
-        "group card relative bg-base-100",
-        "h-full w-full max-w-4xl",
+        "group card bg-base-100",
         "shadow-2xl drop-shadow-2xl transition-all",
+        className,
       )}
     >
-      <figure className="relative h-full w-full overflow-hidden rounded-lg bg-base-300 p-4">
-        <img
-          src={imageSrc}
-          alt="Preview image"
-          className="z-1 h-auto w-full object-contain shadow-primary"
-        />
-      </figure>
-
       {onRemove && (
         <button
           title="Remove image"
@@ -52,26 +46,40 @@ export default function ImagePreview({
         </button>
       )}
 
-      {/* Footer / Metadata */}
+      <figure className="relative h-full w-full overflow-hidden rounded-lg bg-base-300 p-4">
+        <img
+          src={imageSrc}
+          alt="Preview image"
+          className="z-1 size-auto max-h-full max-w-full object-contain shadow-primary"
+        />
+      </figure>
+
+      {/* Footer */}
       {(fileName || formattedSize) && (
         <div className="card-body gap-1 p-4 pt-2">
-          <div className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-lg bg-primary">
-              <FileImage className="size-6 text-primary-content" />
+          <div className="flex items-center justify-between gap-10">
+            {/* Metadata */}
+            <div className="flex items-center gap-3 overflow-hidden">
+              <div className="flex items-center justify-center rounded-lg bg-primary p-2">
+                <FileImage className="size-6 text-primary-content" />
+              </div>
+              <div className="flex flex-1 flex-col gap-1 overflow-hidden leading-none">
+                {fileName && (
+                  <p className="truncate font-medium" title={fileName}>
+                    {fileName}
+                  </p>
+                )}
+                {formattedSize && (
+                  <p className="text-xs text-base-content/70">
+                    {formattedSize}
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="flex min-w-0 flex-1 flex-col">
-              {fileName && (
-                <p
-                  className="truncate leading-tight font-medium"
-                  title={fileName}
-                >
-                  {fileName}
-                </p>
-              )}
-              {formattedSize && (
-                <p className="text-xs text-base-content/70">{formattedSize}</p>
-              )}
-            </div>
+
+            <button className="btn btn-circle btn-primary">
+              <SearchIcon className="size-5" />
+            </button>
           </div>
         </div>
       )}
@@ -86,8 +94,8 @@ function EmptyImagePreview({
   return (
     <div
       className={cn(
-        "h-full w-full max-w-4xl rounded-box py-16",
         "flex flex-col items-center justify-center gap-4",
+        "max-w-4xl rounded-box py-16",
         "border-4 border-dashed border-base-300 hover:bg-base-300",
         "cursor-pointer transition-all",
         className,
