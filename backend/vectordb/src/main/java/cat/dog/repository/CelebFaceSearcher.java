@@ -21,7 +21,7 @@ public class CelebFaceSearcher {
     private static final String CLASS_NAME = "CelebFaceEmbeddings";
 
     public static void main(String[] args) {
-        String queryImagePath = "./received_images/leonardo_di_caprio.jpg";
+        String queryImagePath = "./received_images/bill_gates.jpg";
         
         System.out.println("Searching for similar celebrity faces...");
         
@@ -31,6 +31,13 @@ public class CelebFaceSearcher {
         for (CelebEmbedding result : results) {
             System.out.println("Found: " + result.getCelebName() + " | Path: " + result.getImagePath());
         }
+        // String celebName = "Bill_Gates";
+        // List<CelebEmbedding> results = getEmbeddingsByName(celebName);
+        // System.out.println("Search results for celebrity name: " + celebName);
+        // for (CelebEmbedding result : results) {
+        //     System.out.println("Found: " + result.getCelebName() + " | Path: " + result.getImagePath());
+        // }   
+
     }
     public static List<CelebEmbedding> getEmbeddingsByName(String celebName) {
         // Weaviate GraphQL 'where' filter for exact string matching

@@ -36,6 +36,9 @@ public class ExtractedFaceImporter {
     }
 
     public static void main(String[] args) {
+        importExtractedFaces();
+    }
+    public static void importExtractedFaces() {
         if (!setupVirtualEnv()) {
             System.err.println("CRITICAL: Failed to setup Python environment.");
             return;
@@ -51,7 +54,6 @@ public class ExtractedFaceImporter {
 
         importPickleData(client);
     }
-
     private static void importPickleData(HttpClient client) {
         String weaviateUrl = DatabaseConfig.getInstance().getWeviateUrl() + "/objects";
 

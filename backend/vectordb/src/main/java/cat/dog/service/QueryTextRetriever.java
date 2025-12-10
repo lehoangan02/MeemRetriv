@@ -106,7 +106,7 @@ public class QueryTextRetriever {
     private List<String> retrieveBaseOnCaptionSearch(Map<String,Object> processedResult) {
         PostgresDbManager pgManager = new PostgresDbManager();
         String caption = (String) processedResult.get("caption");
-            System.out.println("Caption: " + caption);
+            // System.out.println("Caption: " + caption);
             ElasticSearchDBManager dbManager = ElasticSearchDBManager.getInstance();
             List<Map.Entry<Integer, String>> searchResults = dbManager.fuzzySearchCaptions(caption, 5.0f);
             // convert the integer reference id to image name stored in postgres
@@ -134,10 +134,11 @@ public class QueryTextRetriever {
         List<List<String>> allResults = new ArrayList<>();
         Map<String, Float> finalMemeScore = new HashMap<>();
         for (String celeb : celebrities) {
-            System.out.println("Celebrity: " + celeb);
+            // System.out.println("Celebrity: " + celeb);
             // get vector embeddings of that celebrity from weviate
             // List<CelebRecord> celebRecords = pgManager.searchCelebByName(celeb);
             List<CelebEmbedding> celebEmbeddings = CelebFaceSearcher.getEmbeddingsByName(celeb);
+            System.out.println("Found " + celebEmbeddings.size() + " embeddings for celebrity: " + celeb);
             List<List<MemeFaceRecord>> allFaces = new ArrayList<>();
             for (CelebEmbedding embedding : celebEmbeddings) {
                 System.out.println("Found embedding for: " + embedding.getCelebName() + " at " + embedding.getImagePath());

@@ -11,7 +11,7 @@ import java.net.http.HttpResponse;
 
 import cat.dog.utility.DatabaseConfig;
 
-public class CelebrityVectorImporter {
+public class CelebVectorImporter {
 
     private static final String VENV_DIR_NAME = ".venv";
     private static final String PICKLE_FILE = "./../../DATA/celebrity_clip_vectors.pkl"; 
@@ -35,6 +35,9 @@ public class CelebrityVectorImporter {
     }
 
     public static void main(String[] args) {
+        importCelebVectors(); 
+    }
+    public static void importCelebVectors() {
         if (!setupVirtualEnv()) {
             System.err.println("CRITICAL: Failed to setup Python environment.");
             return;

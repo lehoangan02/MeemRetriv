@@ -11,7 +11,9 @@ import cat.dog.repository.MemeVectorImporter;
 import cat.dog.repository.PostgresSchemaCreator;
 import cat.dog.repository.WeviateSchema;
 import cat.dog.repository.ElasticSearchDBManager;
+import cat.dog.repository.ExtractedFaceImporter;
 import cat.dog.utility.CSVLoader;
+import cat.dog.repository.CelebVectorImporter;
 
 @SpringBootApplication
 public class App implements CommandLineRunner
@@ -71,10 +73,14 @@ public class App implements CommandLineRunner
     private void setupWeaviateSchema() throws Exception {
         WeviateSchema.createWeviateClass("MemeImage", "A meme image's precomputed CLIP vector");
         WeviateSchema.createWeviateClass("MemeImageCleaned", "A meme image without text and its precomputed CLIP vector");
+        WeviateSchema.createCelebFacePickleSchema("CelebFaceEmbeddings", "An embedding of a celebrity's face");
+        WeviateSchema.createExtractedFaceSchema("ExtractedFaceEmbeddings", "An embedding of an extracted face from a meme image");
     }
     private void importMemeVectorsToWeaviate() {
         MemeVectorImporter.importVectors("MemeImage", "./../../DATA/embeddings/");
         MemeVectorImporter.importVectors("MemeImageCleaned", "./../../DATA/embeddings_cleaned/");
+        CelebVectorImporter.importCelebVectors();
+        ExtractedFaceImporter.importExtractedFaces();
     }
     private void setupElasticSearchIndices() {
         ElasticSearchDBManager dbManager = ElasticSearchDBManager.getInstance();
