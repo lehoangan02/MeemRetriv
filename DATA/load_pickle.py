@@ -1,12 +1,14 @@
 import pickle
 
 # Load the pickle file
-with open('celebrity_clip_vectors.pkl', 'rb') as f:
+with open('meme_face_embeddings_mobileclip.pkl', 'rb') as f:
     data = pickle.load(f)
 
 # Inspect the structure
 print(f"Type: {type(data)}")
 print(f"Keys/Length: {len(data)}")
+print(f"len(data): {len(data)}")
+
 
 # Print sample data
 if isinstance(data, dict):
