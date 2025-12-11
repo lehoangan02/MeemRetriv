@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from "react";
 import ImagePreview from "@/components/image-preview";
 import InputFileButton from "@/components/input-file-button";
 
-export default function ImageUploader() {
+export default function ImageRetrievalPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   function handleFileChange(newFile: File | null) {
     setFile(newFile);
@@ -17,6 +18,11 @@ export default function ImageUploader() {
     }
   }
 
+  function handleSearch() {
+    setIsLoading(true);
+    setTimeout(() => setIsLoading(false), 3000);
+  }
+
   useEffect(() => {
     return () => {
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -26,10 +32,11 @@ export default function ImageUploader() {
   return (
     <div className="flex h-full flex-col items-center gap-10 px-4 py-8">
       <ImagePreview
+        file={file}
         imageSrc={previewUrl}
-        fileName={file?.name}
-        fileSize={file?.size}
+        isLoading={isLoading}
         onRemove={() => handleFileChange(null)}
+        onSearch={handleSearch}
         onSelectImage={() => inputRef.current?.click()}
         className="min-h-0 w-full max-w-4xl flex-1"
       />

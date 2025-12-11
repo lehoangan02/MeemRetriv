@@ -1,2 +1,2 @@
-export const retrievalModes = ["Image", "Text"] as const;
+export const retrievalModes = ["Text", "Image"] as const;
 export type RetrievalMode = (typeof retrievalModes)[number];

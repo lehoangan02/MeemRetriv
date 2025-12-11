@@ -7,10 +7,15 @@ export default function ModeSelector() {
 
   return (
     <div className="dropdown">
-      <div tabIndex={0} role="button" className="btn min-w-36 btn-soft">
+      <div
+        tabIndex={0}
+        role="button"
+        className="btn transition-all duration-300 btn-soft btn-sm md:btn-md"
+      >
         <Settings2Icon className="size-5" />
         <p className="leading-none">
-          Mode: <span>{mode}</span>
+          <span className="hidden md:inline">Mode:&nbsp;</span>
+          <span>{mode}</span>
         </p>
       </div>
       <ul

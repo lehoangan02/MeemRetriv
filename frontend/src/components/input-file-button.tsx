@@ -1,5 +1,11 @@
 import React, { type ChangeEventHandler } from "react";
-import { LinkIcon, FilePlusIcon, FolderOpenIcon, MenuIcon } from "lucide-react";
+import {
+  LinkIcon,
+  FilePlusIcon,
+  FolderOpenIcon,
+  MenuIcon,
+  HistoryIcon,
+} from "lucide-react";
 
 interface InputFileButtonProps {
   inputRef: React.RefObject<HTMLInputElement | null>;
@@ -13,6 +19,7 @@ export default function InputFileButton({
   const handleFileChange: ChangeEventHandler<HTMLInputElement> = (e) => {
     const file = e.target.files?.[0];
     if (file) onFileSelected(file);
+    e.target.value = "";
   };
 
   return (
@@ -55,6 +62,12 @@ export default function InputFileButton({
             <button className="inline-flex items-center gap-2 px-4 py-3 leading-none">
               <LinkIcon className="size-4" />
               By URL
+            </button>
+          </li>
+          <li>
+            <button className="inline-flex items-center gap-2 px-4 py-3 leading-none">
+              <HistoryIcon className="size-4" />
+              HIstory
             </button>
           </li>
         </ul>

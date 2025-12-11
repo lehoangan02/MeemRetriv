@@ -3,21 +3,25 @@ import { ImageOff, XIcon, FileImage, SearchIcon } from "lucide-react";
 import React, { useMemo } from "react";
 
 interface ImagePreviewProps {
-  imageSrc?: string | null;
-  fileName?: string;
-  fileSize?: number; // in bytes
+  file: File | null;
+  imageSrc: string | null;
+  isLoading: boolean;
+  onSearch: () => void;
   onRemove: () => void;
   onSelectImage: () => void;
 }
 
 export default function ImagePreview({
+  file,
   imageSrc,
-  fileName,
-  fileSize,
+  isLoading,
   onRemove,
+  onSearch,
   onSelectImage,
   className,
 }: ImagePreviewProps & React.ComponentProps<"div">) {
+  const fileName = file?.name;
+  const fileSize = file?.size;
   const formattedSize = useMemo(() => {
     if (!fileSize) return null;
     if (fileSize < 1024) return `${fileSize} B`;
@@ -41,6 +45,7 @@ export default function ImagePreview({
           title="Remove image"
           className="btn absolute top-0 right-0 z-10 btn-circle translate-x-1/3 -translate-y-1/3 shadow-md transition-transform btn-xs btn-error hover:scale-125"
           onClick={onRemove}
+          disabled={isLoading}
         >
           <XIcon className="size-5" />
         </button>
@@ -77,8 +82,16 @@ export default function ImagePreview({
               </div>
             </div>
 
-            <button className="btn btn-circle btn-primary">
-              <SearchIcon className="size-5" />
+            <button
+              className="btn btn-circle btn-primary"
+              onClick={onSearch}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <span className="loading loading-spinner text-primary" />
+              ) : (
+                <SearchIcon className="size-5" />
+              )}
             </button>
           </div>
         </div>

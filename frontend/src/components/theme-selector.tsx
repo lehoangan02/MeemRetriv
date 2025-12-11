@@ -6,10 +6,14 @@ export default function ThemeSelector() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="dropdown">
-      <div tabIndex={0} role="button" className="btn btn-soft">
+    <div className="dropdown dropdown-end">
+      <div
+        tabIndex={0}
+        role="button"
+        className="btn transition-all duration-300 btn-soft btn-sm md:btn-md"
+      >
         <PaletteIcon className="size-5" />
-        <p className="leading-none">Theme</p>
+        <p className="hidden leading-none md:block">Theme</p>
         <ChevronDownIcon className="inline-flex size-4 opacity-70" />
       </div>
       <ul

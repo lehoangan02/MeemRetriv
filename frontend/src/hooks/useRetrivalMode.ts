@@ -10,7 +10,7 @@ const STORAGE_KEY = "retrieval-mode";
 
 export const useRetrievalMode = create<RetrievalModeState>()((set) => {
   const savedMode = localStorage.getItem(STORAGE_KEY) as RetrievalMode | null;
-  const initialMode = savedMode || "Image";
+  const initialMode = savedMode || "Text";
 
   return {
     mode: initialMode,
