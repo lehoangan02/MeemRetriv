@@ -69,7 +69,7 @@ public class ExtractedFaceSearcher {
 
             if (response.statusCode() == 200) {
                 // DEBUG: Print raw response to verify data exists and field order
-                System.out.println("DEBUG: Raw Response: " + response.body());
+                // System.out.println("DEBUG: Raw Response: " + response.body());
                 results = parseResponse(response.body());
             } else {
                 System.err.println("Weaviate Error: " + response.statusCode());
