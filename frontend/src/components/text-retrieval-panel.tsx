@@ -1,9 +1,11 @@
 import { useRef } from "react";
 import { cn } from "@/lib/utils";
-import { Search, ArrowRight, BotIcon } from "lucide-react";
+import { Search, BotIcon, SendHorizonalIcon } from "lucide-react";
+import useRetrieve from "@/hooks/useRetrieve";
 
 export default function TextRetrievalPanel() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { mutate: retrieve, isPending } = useRetrieve();
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const el = e.target;
@@ -14,7 +16,7 @@ export default function TextRetrievalPanel() {
   const handleSearch = () => {
     const query = textareaRef.current?.value.trim();
     if (!query) return;
-    alert(`Test query: ${query}`);
+    retrieve({ textQuery: query });
   };
 
   const handleSuggestionClick = (text: string) => {
@@ -58,7 +60,7 @@ export default function TextRetrievalPanel() {
                 }
               }}
               className={cn(
-                "textarea max-h-1000 min-h-36 w-full resize-none bg-transparent px-6 py-5",
+                "textarea max-h-72 min-h-36 w-full resize-none bg-transparent px-6 py-5",
                 "border-none outline-none",
                 "scrollbar-thin scrollbar-stable scrollbar-thumb-base-content/30 scrollbar-track-transparent",
                 "text-base leading-normal text-base-content placeholder:text-base-content/30",
@@ -74,13 +76,13 @@ export default function TextRetrievalPanel() {
 
               <button
                 onClick={handleSearch}
-                disabled={false}
-                className={cn(
-                  "btn gap-2 text-primary-content transition-all btn-sm btn-primary",
-                )}
+                disabled={isPending}
+                className={
+                  "btn items-center gap-1 leading-tight text-primary-content transition-all btn-sm btn-primary"
+                }
               >
-                Search
-                <ArrowRight className="h-4 w-4" />
+                <span>Search</span>
+                <SendHorizonalIcon className="size-4" />
               </button>
             </div>
           </div>

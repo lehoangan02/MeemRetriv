@@ -1,26 +1,30 @@
 import { useEffect, useRef, useState } from "react";
 import ImagePreview from "@/components/image-preview";
 import InputFileButton from "@/components/input-file-button";
+import useRetrieve from "@/hooks/useRetrieve";
+import { useImageHistory } from "@/hooks/useImageHistory";
 
 export default function ImageRetrievalPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: retrieve, isPending } = useRetrieve();
+  const { append } = useImageHistory();
 
   function handleFileChange(newFile: File | null) {
     setFile(newFile);
     if (newFile) {
       const url = URL.createObjectURL(newFile);
       setPreviewUrl(url);
+      append(newFile);
     } else {
       setPreviewUrl(null);
     }
   }
 
   function handleSearch() {
-    setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 3000);
+    if (!file) return;
+    retrieve({ file: file });
   }
 
   useEffect(() => {
@@ -34,7 +38,7 @@ export default function ImageRetrievalPanel() {
       <ImagePreview
         file={file}
         imageSrc={previewUrl}
-        isLoading={isLoading}
+        isLoading={isPending}
         onRemove={() => handleFileChange(null)}
         onSearch={handleSearch}
         onSelectImage={() => inputRef.current?.click()}
