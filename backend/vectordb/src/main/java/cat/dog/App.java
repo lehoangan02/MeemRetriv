@@ -14,6 +14,8 @@ import cat.dog.repository.ElasticSearchDBManager;
 import cat.dog.repository.WeviateExtractedFaceImporter;
 import cat.dog.utility.CSVLoader;
 import cat.dog.repository.CelebVectorImporter;
+import cat.dog.repository.ChromaCollectionSetup;
+import cat.dog.repository.ChromaExtractedFaceImporter;
 
 @SpringBootApplication
 public class App implements CommandLineRunner
@@ -91,5 +93,11 @@ public class App implements CommandLineRunner
         ElasticSearchDBManager dbManager = ElasticSearchDBManager.getInstance();
         dbManager.importCelebNames();
         dbManager.importCaptions();
+    }
+    private void setupChromaCollection() throws Exception {
+        ChromaCollectionSetup.createExtractedFaceCollection("face_vectors");
+    }
+    private void importChromaExtractedFaces() throws Exception {
+        ChromaExtractedFaceImporter.importExtractedFaces();
     }
 }
