@@ -18,7 +18,7 @@ except RuntimeError:
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from ner import GLiNER_Person_Entity_Prediction
+from NER import GLiNER_Person_Entity_Prediction
 
 class MemeLLMProcessor:
     def __init__(self, model_name="Qwen/Qwen2.5-1.5B-Instruct"):
