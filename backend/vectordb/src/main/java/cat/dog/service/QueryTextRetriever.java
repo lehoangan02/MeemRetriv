@@ -18,6 +18,7 @@ import cat.dog.repository.WeviateExtractedFaceSearcher;
 import cat.dog.repository.MemeSearcher;
 import cat.dog.repository.PostgresDbManager;
 import cat.dog.utility.LLMQueryProcessor;
+import cat.dog.repository.ChromaExtractedFaceSearcher;
 
 public class QueryTextRetriever {
     private static QueryTextRetriever INSTANCE = new QueryTextRetriever();
@@ -166,7 +167,8 @@ public class QueryTextRetriever {
             for (CelebEmbedding embedding : celebEmbeddings) {
                 // System.out.println("Found embedding for: " + embedding.getCelebName() + " at " + embedding.getImagePath());
                 // search similar faces in weaviate using the embedding vector
-                List<MemeFaceRecord> faces = WeviateExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
+                // List<MemeFaceRecord> faces = WeviateExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
+                List<MemeFaceRecord> faces = ChromaExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
                 allFaces.add(faces);
             }
             long faceSearchEndTime = System.currentTimeMillis();

@@ -16,7 +16,7 @@ import cat.dog.utility.ClipEmbedder;
 public class ChromaExtractedFaceSearcher {
 
     // UPDATE: Matches the collection name you successfully created and imported into
-    private static final String COLLECTION_NAME = "ExtractedFaceEmbeddings";
+    private static final String COLLECTION_NAME = "face_vectors";
     
     // Port 8001 as per your Docker setup
     private static final String CHROMA_BASE_URL = "http://localhost:8001/api/v1";
