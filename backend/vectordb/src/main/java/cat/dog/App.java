@@ -172,8 +172,8 @@ public class App implements CommandLineRunner
     private void waitForPythonServer() throws InterruptedException {
         System.out.println("⏳ Waiting for Python models to load...");
         
-        // Try for up to 60 seconds (30 checks * 2 seconds)
-        for (int i = 0; i < 30; i++) {
+        // Try for up to 15 minutes
+        for (int i = 0; i < 450; i++) {
             if (isPythonServerUp()) {
                 System.out.println("✅ Python Server is Ready!");
                 return;
