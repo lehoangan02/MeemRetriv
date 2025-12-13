@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  chroma:
+    # CHANGE THIS LINE:
+    image: chromadb/chroma:0.5.18
+    container_name: chroma_server
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    networks:
+      - net
+
+networks:
+  net:
+    driver: bridge

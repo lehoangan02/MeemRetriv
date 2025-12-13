@@ -218,3 +218,4 @@ backend/vectordb/models/mobileclip_s0.pt
 *.pt
 *.onnx
 /DATA/celebrity_images_by_name
+/backend/vectordb/chroma/chroma_data

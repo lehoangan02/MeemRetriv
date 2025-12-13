@@ -14,7 +14,7 @@ import cat.dog.dto.MemeFaceRecord;
 import cat.dog.utility.ClipEmbedder;
 import cat.dog.utility.DatabaseConfig;
 
-public class ExtractedFaceSearcher {
+public class WeviateExtractedFaceSearcher {
 
     private static final String CLASS_NAME = "ExtractedFaceEmbeddings";
 
@@ -43,10 +43,20 @@ public class ExtractedFaceSearcher {
         // System.out.println("DEBUG: Vector generated successfully (length: " + vectorStr.length() + ")");
 
         // 2. Search Weaviate
-        return searchWeaviate(vectorStr, limit);
+        return searchWeviate(vectorStr, limit);
+    }
+    public static List<MemeFaceRecord> searchFaceWithEmbedding(String[] vector, int limit) {
+        if (vector == null || vector.length == 0) {
+            return new ArrayList<>();
+        }
+        
+        // Convert String array ["0.1", "0.2"] -> String "[0.1, 0.2]"
+        String vectorJson = "[" + String.join(", ", vector) + "]";
+        
+        return searchWeviate(vectorJson, limit);
     }
 
-    private static List<MemeFaceRecord> searchWeaviate(String vectorStr, int limit) {
+    private static List<MemeFaceRecord> searchWeviate(String vectorStr, int limit) {
         List<MemeFaceRecord> results = new ArrayList<>();
         try {
             HttpClient client = HttpClient.newHttpClient();
@@ -118,11 +128,10 @@ public class ExtractedFaceSearcher {
     }
 
     public static void main(String[] args) {
-        ExtractedFaceSearcher searcher = new ExtractedFaceSearcher();
         String testPath = "./received_images/leonardo_di_caprio.jpg"; 
         
         System.out.println("Searching for faces matching: " + testPath);
-        List<MemeFaceRecord> results = searcher.searchFace(testPath, 5);
+        List<MemeFaceRecord> results = WeviateExtractedFaceSearcher.searchFace(testPath, 5);
         
         System.out.println("Found " + results.size() + " matches.");
         for (MemeFaceRecord rec : results) {

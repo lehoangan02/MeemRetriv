@@ -1,0 +1,1 @@
+ID=$(curl -s http://localhost:8001/api/v1/collections/face_vectors | grep -o '"id":"[^"]*"' | cut -d'"' -f4) && curl http://localhost:8001/api/v1/collections/$ID/count

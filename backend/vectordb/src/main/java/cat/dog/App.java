@@ -11,7 +11,7 @@ import cat.dog.repository.MemeVectorImporter;
 import cat.dog.repository.PostgresSchemaCreator;
 import cat.dog.repository.WeviateSchema;
 import cat.dog.repository.ElasticSearchDBManager;
-import cat.dog.repository.ExtractedFaceImporter;
+import cat.dog.repository.WeviateExtractedFaceImporter;
 import cat.dog.utility.CSVLoader;
 import cat.dog.repository.CelebVectorImporter;
 
@@ -80,7 +80,7 @@ public class App implements CommandLineRunner
         MemeVectorImporter.importVectors("MemeImage", "./../../DATA/embeddings/");
         MemeVectorImporter.importVectors("MemeImageCleaned", "./../../DATA/embeddings_cleaned/");
         CelebVectorImporter.importCelebVectors();
-        ExtractedFaceImporter.importExtractedFaces();
+        WeviateExtractedFaceImporter.importExtractedFaces();
     }
     private void setupElasticSearchIndices() {
         ElasticSearchDBManager dbManager = ElasticSearchDBManager.getInstance();

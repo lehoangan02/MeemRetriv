@@ -41,11 +41,20 @@ class MemeLLMProcessor:
     def process_query(self, query):
         # NOTE: Since we are running in the same process now, 
         # ensure ner.py isn't trying to spawn new processes unnecessarily
+
+        # Count time taken to predict person entities by the NER model
+        import time
+        start_time = time.time()
         celebrities = self.ner_model.predict_person_entities(query, threshold=0.5)
+        end_time = time.time()
+        print(f"Time taken to predict person entities: {(end_time - start_time) * 1000:.2f} ms")
         if celebrities:
             celebrities_text = ", ".join(celebrities)  # joins all names with comma
         else:
             celebrities_text = "unknown"
+
+        # Count time taken to extract caption from the query by the LLM
+        start_time = time.time()
 
         # Extract caption if present in quotes
         import re
@@ -99,6 +108,10 @@ class MemeLLMProcessor:
         ]
 
         response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+
+        end_time = time.time()
+        print(f"Time taken to extract caption and description: {(end_time - start_time) * 1000:.2f} ms")
+        
         return response
 
 if __name__ == "__main__":

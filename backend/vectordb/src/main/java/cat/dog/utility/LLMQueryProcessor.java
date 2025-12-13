@@ -1,104 +1,61 @@
 package cat.dog.utility;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Component
 public class LLMQueryProcessor {
 
     private final ObjectMapper objectMapper;
+    private final HttpClient httpClient;
+    private static final String SERVER_URL = "http://127.0.0.1:8000/analyze";
 
     public LLMQueryProcessor() {
         this.objectMapper = new ObjectMapper();
-        // Allow single quotes (e.g. {'key': 'value'})
-        this.objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_SINGLE_QUOTES, true);
-        // Allow unquoted field names (e.g. {key: "value"})
-        this.objectMapper.configure(com.fasterxml.jackson.core.JsonParser.Feature.ALLOW_UNQUOTED_FIELD_NAMES, true);
+        this.httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(10))
+                .build();
     }
+
     public Map<String, Object> processQuery(String queryText) {
         try {
-            // 1. Define paths relative to project root
-            // Ensure this points to where your python folder actually is
-            String pythonEnvPath = ".venv/bin/python"; 
-            String scriptPath = "python/MemeLLMProcessor.py";
+            // 1. Create JSON Payload: {"query": "..."}
+            Map<String, String> payload = new HashMap<>();
+            payload.put("query", queryText);
+            String requestBody = objectMapper.writeValueAsString(payload);
 
-            // Verify file existence
-            File scriptFile = new File(scriptPath);
-            if (!scriptFile.exists()) {
-                throw new RuntimeException("Python script not found at: " + scriptFile.getAbsolutePath() +
-                        ". Check your path.");
+            // 2. Build HTTP Request
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(SERVER_URL))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
+
+            // 3. Send Request
+            HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Server returned error: " + response.body());
             }
 
-            // 2. Build the process
-            ProcessBuilder processBuilder = new ProcessBuilder(
-                    pythonEnvPath,
-                    scriptPath,
-                    queryText
-            );
-
-            processBuilder.directory(new File("."));
-            Process process = processBuilder.start();
-
-            // 3. Read the Output
-            String output;
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
-                output = reader.lines().collect(Collectors.joining("\n"));
-            }
-
-            // 4. Wait for finish
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                throw new RuntimeException("Python script exited with error code: " + exitCode);
-            }
-
-            // 5. Clean and Parse JSON
-            String jsonString = extractJsonString(output);
-
-            System.out.println("Extracted JSON: " + jsonString);
-
-            return objectMapper.readValue(jsonString, new TypeReference<Map<String, Object>>() {});
+            // 4. Parse Response
+            // The Python server now returns clean JSON, so we just map it.
+            return objectMapper.readValue(response.body(), Map.class);
 
         } catch (Exception e) {
             e.printStackTrace();
             Map<String, Object> errorMap = new HashMap<>();
-            errorMap.put("error", "Failed to process query: " + e.getMessage());
+            errorMap.put("error", "Failed to communicate with AI Server: " + e.getMessage());
             return errorMap;
         }
-    }
-
-    /**
-     * Helper to extract valid JSON. 
-     * Improved to skip Python dictionaries (single quotes) and find actual JSON (double quotes).
-     */
-    private String extractJsonString(String rawOutput) {
-        // 1. Try to find markdown block first
-        Pattern markdownPattern = Pattern.compile("```json(.*?)```", Pattern.DOTALL);
-        Matcher markdownMatcher = markdownPattern.matcher(rawOutput);
-        if (markdownMatcher.find()) {
-            return markdownMatcher.group(1).trim();
-        }
-
-        // 2. Find the index of the first "{" and the last "}"
-        int firstOpen = rawOutput.indexOf("{");
-        int lastClose = rawOutput.lastIndexOf("}");
-
-        if (firstOpen != -1 && lastClose > firstOpen) {
-            return rawOutput.substring(firstOpen, lastClose + 1);
-        }
-
-        return rawOutput;
     }
 
     // ==========================================
@@ -106,20 +63,22 @@ public class LLMQueryProcessor {
     // ==========================================
     public static void main(String[] args) {
         LLMQueryProcessor processor = new LLMQueryProcessor();
+        
+        // Ensure you run 'python meme_server.py' in a separate terminal first!
         String testQuery = "PERFECTLY HEALTHY GIVES BILLIONS TO CURE DISEASE KEEPS BILLIONS DIES OF CANCER";
 
         System.out.println("--------------------------------------------------");
-        System.out.println("Starting Test...");
-        
+        System.out.println("Sending Request to Python Server...");
+
         long startTime = System.currentTimeMillis();
         Map<String, Object> result = processor.processQuery(testQuery);
         long endTime = System.currentTimeMillis();
 
         if (result.containsKey("error")) {
             System.err.println("ERROR: " + result.get("error"));
+            System.err.println("Did you start the Python server?");
         } else {
             System.out.println("Success! (" + (endTime - startTime) + "ms)");
-            System.out.println("Parsed Output:");
             result.forEach((key, value) -> System.out.println("   - " + key + ": " + value));
         }
     }

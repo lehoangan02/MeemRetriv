@@ -14,7 +14,7 @@ import cat.dog.dto.LabelRecord;
 import cat.dog.dto.MemeFaceRecord;
 import cat.dog.repository.CelebFaceSearcher;
 import cat.dog.repository.ElasticSearchDBManager;
-import cat.dog.repository.ExtractedFaceSearcher;
+import cat.dog.repository.WeviateExtractedFaceSearcher;
 import cat.dog.repository.MemeSearcher;
 import cat.dog.repository.PostgresDbManager;
 import cat.dog.utility.LLMQueryProcessor;
@@ -153,17 +153,25 @@ public class QueryTextRetriever {
         Map<String, Float> finalMemeScore = new HashMap<>();
         for (String celeb : celebrities) {
             // System.out.println("Celebrity: " + celeb);
-            // get vector embeddings of that celebrity from weviate
-            // List<CelebRecord> celebRecords = pgManager.searchCelebByName(celeb);
+            // Count time taken to search embeddings for this celebrity
+            long startTime = System.currentTimeMillis();
             List<CelebEmbedding> celebEmbeddings = CelebFaceSearcher.getEmbeddingsByName(celeb);
+            long endTime = System.currentTimeMillis();
+            System.out.println("Time taken to search embeddings for " + celeb + ": " + (endTime - startTime) + " ms");
+            //
             System.out.println("Found " + celebEmbeddings.size() + " embeddings for celebrity: " + celeb);
             List<List<MemeFaceRecord>> allFaces = new ArrayList<>();
+            // Count time taken to search faces for all embeddings
+            long faceSearchStartTime = System.currentTimeMillis();
             for (CelebEmbedding embedding : celebEmbeddings) {
-                System.out.println("Found embedding for: " + embedding.getCelebName() + " at " + embedding.getImagePath());
+                // System.out.println("Found embedding for: " + embedding.getCelebName() + " at " + embedding.getImagePath());
                 // search similar faces in weaviate using the embedding vector
-                List<MemeFaceRecord> faces = ExtractedFaceSearcher.searchFace(embedding.getImagePath(), 20);
+                List<MemeFaceRecord> faces = WeviateExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
                 allFaces.add(faces);
             }
+            long faceSearchEndTime = System.currentTimeMillis();
+            System.out.println("Time taken to search faces for all embeddings of " + celeb + ": " + (faceSearchEndTime - faceSearchStartTime) + " ms");
+            //
             Map<String, Float> memeScore = new HashMap<>();
             for (List<MemeFaceRecord> faceList : allFaces) {
                 for (MemeFaceRecord face : faceList) {
