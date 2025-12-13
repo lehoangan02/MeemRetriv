@@ -34,6 +34,8 @@ public class App implements CommandLineRunner
         importMemeVectorsToWeaviate();
         setupElasticSearchIndices();
         importElasticSearchData();
+        setupChromaCollection();
+        importChromaExtractedFaces();
     }
     private void setupPostgresSchema() {
         PostgresSchemaCreator.createSchema("./../schema/schema_label.sql");

@@ -59,7 +59,7 @@ public class ChromaExtractedFaceImporter {
 
         // 2. CHECK: If data exists, stop to avoid duplication
         if (doesCollectionHaveObjects(client, collectionId)) {
-            System.out.println("INFO: Collection already contains data. Skipping import.");
+            System.out.println("CHROMA INFO: Collection already contains data. Skipping import.");
             return;
         }
 
