@@ -29,9 +29,26 @@ unzip archive.zip
 
 # Download the cleaned.zip file from https://huggingface.co/datasets/Anov129/celeb/resolve/main/cleaned.zip?download=true
 
-wget https://huggingface.co/datasets/Anov129/celeb/resolve/main/cleaned.zip?download=true
+wget "https://huggingface.co/datasets/Anov129/celeb/resolve/main/cleaned.zip?download=true"
 
-unzip cleaned.zip
+unzip cleaned.zip?download=true
+
+# Download the extracted_faces.zip file from https://huggingface.co/datasets/Anov129/celeb/resolve/main/extracted_faces.zip?download=true
+wget "https://huggingface.co/datasets/Anov129/celeb/resolve/main/extracted_faces.zip?download=true"
+
+unzip extracted_faces.zip?download=true
+
+# Download the celebrity_images_by_name.zip file from https://huggingface.co/datasets/Anov129/celeb/resolve/main/celebrity_images_by_name.zip?download=true
+wget "https://huggingface.co/datasets/Anov129/celeb/resolve/main/celebrity_images_by_name.zip?download=true"
+
+unzip celebrity_images_by_name.zip?download=true
+
+wget -O celebrity_clip_vectors.pkl \
+"https://huggingface.co/datasets/Anov129/celeb/resolve/main/celebrity_clip_vectors.pkl?download=true"
+
+wget -O meme_face_embeddings_mobileclip.pkl \
+"https://huggingface.co/datasets/Anov129/celeb/resolve/main/meme_face_embeddings_mobileclip.pkl?download=true"
+
 cd ..
 ```
 
@@ -69,7 +86,21 @@ curl -X GET "http://127.0.0.1:8080/v1/meta" | jq
 cd ..
 ```
 
-Running the database
+Set up Elasticsearch database.
+
+```
+cd backend/vectordb/elastic_search/
+docker-compose up -d
+```
+
+Set up Chroma database.
+
+```
+cd backend/vectordb/chroma/
+docker-compose up -d
+```
+
+Run the backend server.
 
 ```
 python -m venv .venv
