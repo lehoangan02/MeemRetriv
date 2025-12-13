@@ -1,5 +1,6 @@
 import os
 import multiprocessing
+import torch
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["OMP_NUM_THREADS"] = "1"
@@ -12,7 +13,9 @@ from gliner import GLiNER
 
 class GLiNER_Person_Entity_Prediction:
     def __init__(self):
-        self.model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1")
+        # Detect device: CUDA -> MPS -> CPU
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+        self.model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1").to(self.device)
 
     def predict_person_entities(self, text, threshold=0.5):
         # We define what we want AND what we want to ignore
@@ -29,7 +32,7 @@ class GLiNER_Person_Entity_Prediction:
             if entity["label"] == "celebrity"
         ]
         
-        print("Predicted Entities (Raw):", entities)
+        # print("Predicted Entities (Raw):", entities)
         return celebrities
 
 if __name__ == "__main__":

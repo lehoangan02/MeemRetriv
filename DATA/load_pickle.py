@@ -7,6 +7,8 @@ with open('celebrity_clip_vectors.pkl', 'rb') as f:
 # Inspect the structure
 print(f"Type: {type(data)}")
 print(f"Keys/Length: {len(data)}")
+print(f"len(data): {len(data)}")
+
 
 # Print sample data
 if isinstance(data, dict):

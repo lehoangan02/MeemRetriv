@@ -1,46 +1,47 @@
 package cat.dog.utility;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Service responsible for generating MobileCLIP embeddings for images and text.
- * This abstracts the Python interop logic away from the repository layer.
+ * * UPDATED: Now acts as a client for the MemeLLM FastAPI server running on localhost:8000.
+ * Ensure the Python server is running before using this utility.
  */
 public class ClipEmbedder {
 
-    private static final String VENV_DIR_NAME = ".venv";
-    private static final String CHECKPOINT_FILE = "./models/mobileclip_s0.pt"; // Ensure this file exists in project root!
-    private static final String PYTHON_EXEC;
-
-    // Static block to determine OS-specific paths for Python inside venv
-    static {
-        boolean isWindows = System.getProperty("os.name").toLowerCase().contains("win");
-        if (isWindows) {
-            PYTHON_EXEC = VENV_DIR_NAME + File.separator + "Scripts" + File.separator + "python.exe";
-        } else {
-            PYTHON_EXEC = VENV_DIR_NAME + File.separator + "bin" + File.separator + "python3";
-        }
-    }
+    private static final String API_BASE_URL = "http://127.0.0.1:8000";
+    private static final String ENDPOINT_TEXT = API_BASE_URL + "/embed_text";
+    private static final String ENDPOINT_IMAGE = API_BASE_URL + "/embed_image";
 
     public static void main(String[] args) {
 
-        // 1. Text Embedding Example -> Saves .npy
+        // 1. Text Embedding Example
         String textQuery = "A funny minion meme";
-        String textNpy = "text_query_vector.npy";
+        String textNpy = "text_query_vector.json"; // Changed extension to .json as we save text representation now
         System.out.println("Embedding text: \"" + textQuery + "\" -> " + textNpy);
         
-        ClipEmbedder.embedText(textQuery, textNpy);
+        String resText = ClipEmbedder.embedText(textQuery, textNpy);
+        System.out.println("Result Preview: " + (resText != null ? resText.substring(0, 50) + "..." : "null"));
 
-        // 2. Image Embedding Example -> Saves .npy
-        String imagePath = "./image_3889.jpg";
-        String imageNpy = "image_3889_vector.npy";
+        // 2. Image Embedding Example
+        String imagePath = "./image_3889.jpg"; // Ensure this file exists for test
+        String imageNpy = "image_3889_vector.json";
         System.out.println("Embedding image: " + imagePath + " -> " + imageNpy);
         
-        ClipEmbedder.embedImage(imagePath, imageNpy);
+        String resImg = ClipEmbedder.embedImage(imagePath, imageNpy);
+        System.out.println("Result Preview: " + (resImg != null ? resImg.substring(0, 50) + "..." : "null"));
         
-        System.out.println("Done. Generated .npy files for inspection.");
+        System.out.println("Done.");
     }
 
     /**
@@ -53,49 +54,23 @@ public class ClipEmbedder {
     /**
      * Generates a normalized vector embedding for the given text.
      * @param textQuery The text to embed.
-     * @param saveNpyPath Optional path to save the vector as a .npy file (can be null).
+     * @param saveNpyPath Optional path to save the vector. Note: This now saves as JSON text, not binary .npy.
      * @return JSON string representation of the vector.
      */
     public static String embedText(String textQuery, String saveNpyPath) {
-        String safeText = textQuery.replace("'", "\\'");
-        
-        // Resolve Checkpoint Path
-        File ckptFile = new File(CHECKPOINT_FILE);
-        if (!ckptFile.exists()) {
-            System.err.println("ClipEmbedder Error: Model checkpoint not found at " + ckptFile.getAbsolutePath());
-            return null;
-        }
-        String ckptPath = ckptFile.getAbsolutePath().replace("\\", "\\\\");
+        if (textQuery == null || textQuery.isEmpty()) return null;
 
-        // Inject NPY saving logic if path is provided
-        String npyLogic = "";
-        if (saveNpyPath != null) {
-            String safePath = saveNpyPath.replace("\\", "\\\\");
-            npyLogic = "    np.save('" + safePath + "', features.cpu().numpy().astype(np.float32))\n";
-        }
-        
-        String pythonScript = 
-            "import torch, mobileclip, json\n" +
-            "import numpy as np\n" +
-            "try:\n" +
-            "    # FIXED: Load from specific checkpoint file to ensure deterministic weights\n" +
-            "    checkpoint_path = '" + ckptPath + "'\n" +
-            "    model, _, _ = mobileclip.create_model_and_transforms('mobileclip_s0', pretrained=checkpoint_path)\n" +
-            "    model.eval()\n" + 
-            "    tokenizer = mobileclip.get_tokenizer('mobileclip_s0')\n" +
-            "    \n" +
-            "    text_tensor = tokenizer(['" + safeText + "'])\n" +
-            "    with torch.no_grad():\n" +
-            "        features = model.encode_text(text_tensor)\n" +
-            "        # CRITICAL: Normalize vector to match database format\n" +
-            "        features /= features.norm(dim=-1, keepdim=True)\n" +
-            "    \n" +
-            npyLogic +
-            "    print('VECTOR_START|' + json.dumps(features.cpu().numpy().flatten().tolist()))\n" +
-            "except Exception as e:\n" +
-            "    print(f'ERROR|{e}')";
+        // Escape text for JSON
+        String safeText = textQuery.replace("\\", "\\\\").replace("\"", "\\\"");
+        String jsonPayload = "{\"text\": \"" + safeText + "\"}";
 
-        return executePython(pythonScript);
+        String vectorJson = sendRequest(ENDPOINT_TEXT, jsonPayload);
+
+        if (vectorJson != null && saveNpyPath != null) {
+            saveVectorToFile(vectorJson, saveNpyPath);
+        }
+
+        return vectorJson;
     }
 
     /**
@@ -106,9 +81,31 @@ public class ClipEmbedder {
     }
 
     /**
+     * Processes a list of images.
+     * Note: The current FastAPI server does not support native batching, so this 
+     * iterates and calls the singular endpoint for each image.
+     */
+    public static List<String> embedImageBatch(List<String> imagePaths) {
+        List<String> results = new ArrayList<>();
+        
+        for (String path : imagePaths) {
+            try {
+                // Call singular method
+                String result = embedImage(path, null);
+                results.add(result);
+            } catch (Exception e) {
+                System.err.println("Error processing batch item " + path + ": " + e.getMessage());
+                results.add(null);
+            }
+        }
+        
+        return results;
+    }
+
+    /**
      * Generates a normalized vector embedding for the image at the given path.
      * @param imagePath Absolute or relative path to the image file.
-     * @param saveNpyPath Optional path to save the vector as a .npy file (can be null).
+     * @param saveNpyPath Optional path to save the vector. Note: This now saves as JSON text, not binary .npy.
      * @return JSON string representation of the vector.
      */
     public static String embedImage(String imagePath, String saveNpyPath) {
@@ -117,70 +114,88 @@ public class ClipEmbedder {
             System.err.println("ClipEmbedder Error: Image file does not exist at " + imagePath);
             return null;
         }
-        
-        // Resolve Paths
-        String absImagePath = imageFile.getAbsolutePath().replace("\\", "\\\\");
-        
-        File ckptFile = new File(CHECKPOINT_FILE);
-        if (!ckptFile.exists()) {
-            System.err.println("ClipEmbedder Error: Model checkpoint not found at " + ckptFile.getAbsolutePath());
-            return null;
-        }
-        String ckptPath = ckptFile.getAbsolutePath().replace("\\", "\\\\");
 
-        // Inject NPY saving logic if path is provided
-        String npyLogic = "";
-        if (saveNpyPath != null) {
-            String safePath = saveNpyPath.replace("\\", "\\\\");
-            npyLogic = "    np.save('" + safePath + "', features.cpu().numpy().astype(np.float32))\n";
+        // Resolve absolute path to send to server
+        String absPath = imageFile.getAbsolutePath().replace("\\", "\\\\");
+        String jsonPayload = "{\"image_path\": \"" + absPath + "\"}";
+
+        String vectorJson = sendRequest(ENDPOINT_IMAGE, jsonPayload);
+
+        if (vectorJson != null && saveNpyPath != null) {
+            saveVectorToFile(vectorJson, saveNpyPath);
         }
 
-        String pythonScript = 
-            "import torch, mobileclip, json\n" +
-            "import numpy as np\n" +
-            "from PIL import Image\n" +
-            "try:\n" +
-            "    # FIXED: Load from specific checkpoint file to ensure deterministic weights\n" +
-            "    checkpoint_path = '" + ckptPath + "'\n" +
-            "    model, _, preprocess = mobileclip.create_model_and_transforms('mobileclip_s0', pretrained=checkpoint_path)\n" +
-            "    model.eval()\n" + 
-            "    image = Image.open('" + absImagePath + "').convert('RGB')\n" +
-            "    image_tensor = preprocess(image).unsqueeze(0)\n" +
-            "    \n" +
-            "    with torch.no_grad():\n" +
-            "        features = model.encode_image(image_tensor)\n" +
-            "        # CRITICAL: Normalize vector to match database format\n" +
-            "        features /= features.norm(dim=-1, keepdim=True)\n" +
-            "    \n" +
-            npyLogic +
-            "    print('VECTOR_START|' + json.dumps(features.cpu().numpy().flatten().tolist()))\n" +
-            "except Exception as e:\n" +
-            "    print(f'ERROR|{e}')";
-
-        return executePython(pythonScript);
+        return vectorJson;
     }
 
-    private static String executePython(String script) {
+    /**
+     * Helper to send HTTP POST request to the FastAPI server.
+     */
+    private static String sendRequest(String endpoint, String jsonPayload) {
+        HttpURLConnection conn = null;
         try {
-            ProcessBuilder pb = new ProcessBuilder(PYTHON_EXEC, "-c", script);
-            pb.redirectErrorStream(true); // Merge stderr into stdout
-            Process process = pb.start();
+            URL url = new URL(endpoint);
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; utf-8");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setDoOutput(true);
 
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // Uncomment for debugging python output
-                // System.out.println("PYTHON: " + line); 
-                
-                if (line.startsWith("VECTOR_START|")) {
-                    return line.split("\\|")[1];
-                } else if (line.startsWith("ERROR|")) {
-                    System.err.println("ClipEmbedder Python Error: " + line.substring(6));
+            // Write Request
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            // Check Status
+            int code = conn.getResponseCode();
+            if (code != 200) {
+                System.err.println("ClipEmbedder Server Error [" + code + "] on " + endpoint);
+                return null;
+            }
+
+            // Read Response
+            StringBuilder response = new StringBuilder();
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
+                String responseLine;
+                while ((responseLine = br.readLine()) != null) {
+                    response.append(responseLine.trim());
                 }
             }
+
+            // Parse JSON response manually to extract just the embedding array
+            // Expected format: {"embedding": [0.1, 0.2, ...]}
+            String respStr = response.toString();
+            int startIndex = respStr.indexOf("[");
+            int endIndex = respStr.lastIndexOf("]");
+            
+            if (startIndex != -1 && endIndex != -1) {
+                // Return just the list part to match previous interface behavior
+                return respStr.substring(startIndex, endIndex + 1);
+            }
+
+            return null;
+
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println("ClipEmbedder Connection Failure: " + e.getMessage());
+            System.err.println("Ensure the FastAPI server is running on " + API_BASE_URL);
+            return null;
+        } finally {
+            if (conn != null) {
+                conn.disconnect();
+            }
         }
-        return null;
+    }
+
+    /**
+     * Saves the vector JSON string to a file.
+     * Replaces the old numpy binary save functionality.
+     */
+    private static void saveVectorToFile(String vectorData, String path) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(path))) {
+            writer.write(vectorData);
+        } catch (Exception e) {
+            System.err.println("ClipEmbedder Error saving file: " + e.getMessage());
+        }
     }
 }

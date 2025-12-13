@@ -114,7 +114,7 @@ public class MemeSearcher {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             
             String responseBody = response.body();
-            System.out.println(formatJson(responseBody));
+            // System.out.println(formatJson(responseBody));
 
             if (response.statusCode() == 200) {
                 JSONObject obj = new JSONObject(response.body());

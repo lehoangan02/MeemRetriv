@@ -3,6 +3,7 @@ package cat.dog.controller;
 import cat.dog.dto.Base64Image;
 import cat.dog.repository.PostgresDbManager;
 import cat.dog.service.QueryImageRetriever;
+import cat.dog.service.QueryTextRetriever;
 import cat.dog.utility.Base64ImageConverter;
 import cat.dog.dto.Base64ImageResponse;
 import cat.dog.dto.LabelRecord;
@@ -56,6 +57,28 @@ public class APIController {
     }
     @PostMapping("/searchByText")
     public ResponseEntity<List<Base64ImageResponse>> searchByText(@RequestBody String textQuery) {
-        return null;
+        System.out.println("Received text query: " + textQuery);
+        QueryTextRetriever retriever = QueryTextRetriever.getInstance();
+        List<String> results = retriever.retrieveSimilarImages(textQuery, 20);
+        List<String> resultsBase64 = new java.util.ArrayList<>();
+        List<String> sentiments = new java.util.ArrayList<>();
+        List<String> filePaths = new java.util.ArrayList<>();
+        PostgresDbManager labelDbManager = new PostgresDbManager();
+        for (String res : results) {
+            LabelRecord record = labelDbManager.getRecordByImageName(res);
+            String imagePath = record.getImagePath();
+            filePaths.add(imagePath);
+            String sentiment = record.getSentiment().toDbValue();
+            String base64Image = Base64ImageConverter.convertToBase64(imagePath);
+            resultsBase64.add(base64Image);
+            sentiments.add(sentiment);
+        }
+        List<Base64ImageResponse> responseList = new java.util.ArrayList<>();
+        for (int i = 0; i < resultsBase64.size(); i++) {
+            responseList.add(new Base64ImageResponse(filePaths.get(i), resultsBase64.get(i), sentiments.get(i)));
+        }
+        System.out.println("Returning " + responseList.size() + " images.");
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(responseList);
     }
 }
