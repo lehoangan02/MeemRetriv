@@ -25,7 +25,7 @@ Download data.
 cd DATA 
 # Download the archive.zip file from https://www.kaggle.com/datasets/hammadjavaid/6992-labeled-meme-images-dataset?resource=download
 # Extract the file
-unzip archive.zip
+unzip archive.zip -d archive
 
 # Download the cleaned.zip file from https://huggingface.co/datasets/Anov129/celeb/resolve/main/cleaned.zip?download=true
 
@@ -42,12 +42,6 @@ unzip extracted_faces.zip?download=true
 wget "https://huggingface.co/datasets/Anov129/celeb/resolve/main/celebrity_images_by_name.zip?download=true"
 
 unzip celebrity_images_by_name.zip?download=true
-
-wget -O celebrity_clip_vectors.pkl \
-"https://huggingface.co/datasets/Anov129/celeb/resolve/main/celebrity_clip_vectors.pkl?download=true"
-
-wget -O meme_face_embeddings_mobileclip.pkl \
-"https://huggingface.co/datasets/Anov129/celeb/resolve/main/meme_face_embeddings_mobileclip.pkl?download=true"
 
 cd ..
 ```
@@ -89,15 +83,17 @@ cd ..
 Set up Elasticsearch database.
 
 ```
-cd backend/vectordb/elastic_search/
+cd elastic_search/
 docker-compose up -d
+cd ..
 ```
 
 Set up Chroma database.
 
 ```
-cd backend/vectordb/chroma/
+cd chroma/
 docker-compose up -d
+cd ..
 ```
 
 Run the backend server.
