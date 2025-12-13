@@ -113,13 +113,14 @@ def embed_text(request: EmbedTextRequest):
         raise HTTPException(status_code=400, detail="Text query cannot be empty")
 
     try:
-        # Use the get_text_embedding method you added previously
         embedding = embedder.get_text_embedding(request.text, normalize=True)
         
         if embedding is None:
              raise HTTPException(status_code=500, detail="Failed to generate text embedding")
 
-        return {"embedding": embedding.tolist()}
+        # FIX: Flatten explicitly if the class returns 2D
+        # If embedding is shape (1, 512), flatten it to (512,)
+        return {"embedding": embedding.flatten().tolist()}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
