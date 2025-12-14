@@ -12,7 +12,7 @@ export default function ImageRetrievalPanel() {
   const { mutate: retrieve, isPending, data } = useRetrieve();
   const memes = useMemo(() => {
     if (!data) return [];
-    return data.map((it) => it.imageBase64);
+    return data.map((it) => `data:image/jpeg;base64,${it.imageBase64}`);
   }, [data]);
   const { append } = useImageHistory();
 
