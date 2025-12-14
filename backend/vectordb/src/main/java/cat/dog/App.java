@@ -20,6 +20,7 @@ import cat.dog.utility.CSVLoader;
 import cat.dog.repository.CelebVectorImporter;
 import cat.dog.repository.ChromaCollectionSetup;
 import cat.dog.repository.ChromaExtractedFaceImporter;
+import cat.dog.repository.ConfigPostgresDatabase;
 
 @SpringBootApplication
 public class App implements CommandLineRunner
@@ -35,6 +36,7 @@ public class App implements CommandLineRunner
         startPythonServer();
         waitForPythonServer();
 
+        createPostgresDatabase("label_db");
         setupPostgresSchema();
         addLabelTableToPostgres();
         addCelebTableToPostgres();
@@ -44,6 +46,9 @@ public class App implements CommandLineRunner
         importElasticSearchData();
         setupChromaCollection();
         importChromaExtractedFaces();
+    }
+    private void createPostgresDatabase(String dbName) {
+        ConfigPostgresDatabase.createDatabase(dbName);
     }
     private void setupPostgresSchema() {
         PostgresSchemaCreator.createSchema("./../schema/schema_label.sql");
