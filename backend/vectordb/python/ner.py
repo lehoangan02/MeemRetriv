@@ -15,6 +15,7 @@ class GLiNER_Person_Entity_Prediction:
     def __init__(self):
         # Detect device: CUDA -> MPS -> CPU
         self.device = torch.device("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
+        # self.device = "cpu"
         self.model = GLiNER.from_pretrained("urchade/gliner_medium-v2.1").to(self.device)
 
     def predict_person_entities(self, text, threshold=0.5):

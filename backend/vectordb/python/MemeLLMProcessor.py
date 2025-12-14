@@ -33,9 +33,33 @@ class MemeLLMProcessor:
             self.dtype = torch.float32
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
-        self.model = AutoModelForCausalLM.from_pretrained(model_name, dtype=self.dtype)
-        self.model.to(self.device)
 
+        # --- VRAM-friendly model loading ---
+        self.model = None
+        if self.device == "cuda":
+            from transformers import BitsAndBytesConfig
+            try:
+                bnb_config = BitsAndBytesConfig(load_in_8bit=True)
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    device_map="auto",
+                    quantization_config=bnb_config
+                )
+                print("[INFO] 8-bit quantization loaded successfully on CUDA.")
+            except Exception as e:
+                print(f"[WARNING] 8-bit quantization failed: {e}")
+                print("[INFO] Falling back to CPU offload to save GPU memory.")
+                self.model = AutoModelForCausalLM.from_pretrained(
+                    model_name,
+                    device_map="auto",
+                    offload_folder="./offload",
+                    dtype=self.dtype
+                )
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(model_name, dtype=self.dtype)
+            self.model.to(self.device)  # safe to move only if no device_map used
+
+        # --- Do NOT call self.model.to() if device_map="auto" is used ---
         self.ner_model = GLiNER_Person_Entity_Prediction()
 
     def process_query(self, query):
