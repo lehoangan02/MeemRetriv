@@ -32,11 +32,11 @@ public class App implements CommandLineRunner
     }
     @Override
     public void run(String... args) throws Exception {
+        createPostgresDatabase("label_db");
 
         startPythonServer();
         waitForPythonServer();
 
-        createPostgresDatabase("label_db");
         setupPostgresSchema();
         addLabelTableToPostgres();
         addCelebTableToPostgres();
