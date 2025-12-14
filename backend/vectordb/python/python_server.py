@@ -98,7 +98,7 @@ def embed_image(request: EmbedImageRequest):
         if embedding is None:
              raise HTTPException(status_code=400, detail="Failed to generate embedding (image corrupt?)")
 
-        return {"embedding": embedding.tolist()}
+        return {"embedding": embedding.flatten().tolist()}
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
