@@ -17,3 +17,10 @@ export function fileToBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+export function stripBase64Prefix(base64: string): string {
+  if (!base64) return base64;
+
+  const commaIndex = base64.indexOf(",");
+  return commaIndex !== -1 ? base64.substring(commaIndex + 1) : base64;
+}

@@ -3,8 +3,7 @@ import axios from "axios";
 
 const axiosClient = axios.create({
   baseURL: ENV.VITE_BACKEND_URL,
-  withCredentials: true,
-  timeoutErrorMessage: "Requests take too long to respond",
+  //timeoutErrorMessage: "Requests take too long to respond",
 });
 
 axiosClient.interceptors.request.use(

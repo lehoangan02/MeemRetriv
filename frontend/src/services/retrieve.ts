@@ -1,4 +1,4 @@
-import { fileToBase64 } from "@/lib/utils";
+import { fileToBase64, stripBase64Prefix } from "@/lib/utils";
 import { searchByText, uploadImageBase64 } from "@/api";
 
 type RetrieveParams = { file: File } | { textQuery: string };
@@ -9,7 +9,7 @@ export async function retrieveService(params: RetrieveParams) {
 
     return uploadImageBase64({
       filename: params.file.name,
-      imageBase64: base64,
+      imageBase64: stripBase64Prefix(base64),
     });
   }
 

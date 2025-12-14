@@ -21,6 +21,7 @@ export default function MemeSearchResults({ memes }: MemeSearchResultsProps) {
               alt={`Meme ${idx + 1}`}
               className="mb-1 w-full cursor-pointer"
               onClick={() => setModalImage(meme)}
+              loading="lazy"
             />
           );
         })}
