@@ -7,5 +7,11 @@ Top panel: Bill Gates, with text saying “Perfectly healthy” and “Gives bil
 Bottom panel: Steve Jobs speaking on a stage, with text saying “Keeps billions” and “Dies of cancer.”
 """
 
-response = requests.post(url, data=meme_description, headers={"Content-Type": "text/plain"})
+headers = {
+    "Content-Type": "text/plain",
+    "Connection": "close" 
+}
+
+response = requests.post(url, data=meme_description.encode('utf-8'), headers=headers)
+
 print(response.text)
