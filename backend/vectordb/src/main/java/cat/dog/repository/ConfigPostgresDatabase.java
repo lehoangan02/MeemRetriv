@@ -16,7 +16,9 @@ public class ConfigPostgresDatabase {
      * @return true if exists, false otherwise
      */
     private static boolean databaseExists(String dbName) {
-        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String url = "jdbc:postgresql://" + DatabaseConfig.getInstance().getPostgresServer() + ":" +
+        DatabaseConfig.getInstance().getPostgresPort() + "/postgres";
+
         String user = DatabaseConfig.getInstance().getPostgresUser();
         String password = DatabaseConfig.getInstance().getPostgresPassword();
 
@@ -44,6 +46,8 @@ public class ConfigPostgresDatabase {
             System.out.println("Database \"" + dbName + "\" already exists.");
             return;
         }
+
+        System.out.println("Creating database \"" + dbName + "\"...");
 
         String url = DatabaseConfig.getInstance().getJdbcUrl();
         String user = DatabaseConfig.getInstance().getPostgresUser();

@@ -14,15 +14,20 @@ public class DatabaseConfig {
 
     private DatabaseConfig() {
         Dotenv dotenv = Dotenv.configure()
-            .directory("../")  // Look in the parent directory
-            .ignoreIfMissing()
+            .directory("./")  // Look in the parent directory
             .load();
+        
+        System.out.println("Loading database configuration from .env file...");
 
         this.server = dotenv.get("POSTGRES_SERVER", "localhost");
         this.port = Integer.parseInt(dotenv.get("POSTGRES_PORT", "5432"));
         this.dbName = dotenv.get("POSTGRES_DB", "label_db");
         this.user = dotenv.get("POSTGRES_USER", "postgres");
         this.password = dotenv.get("POSTGRES_PASSWORD", "123456789");
+
+        if (server == null || dbName == null || user == null || password == null) {
+            throw new RuntimeException("Missing required environment variables in .env file!");
+        }
     }
 
     public static DatabaseConfig getInstance() {
