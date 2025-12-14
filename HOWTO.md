@@ -17,7 +17,7 @@ git clone https://github.com/lehoangan02/MeemRetriv
 cd MeemRetriv
 ```
 
-### Running the database
+## Running the database
 
 Download data.
 
@@ -96,7 +96,15 @@ docker-compose up -d
 cd ..
 ```
 
-Run the backend server.
+Set up PostgreSQL database.
+
+```
+cd postgres/
+docker-compose up -d
+cd ..
+```
+
+### Run the backend server.
 
 ```
 python -m venv .venv
@@ -105,4 +113,15 @@ pip install -r requirements.txt
 deactivate
 mvn clean compile && mvn exec:java -Dexec.mainClass="cat.dog.App"
 ```
+
+## Test the backend server.
+
+Open another terminal and run the test script.
+
+```
+# assuming you are in the root directory of the project
+cd frontend/testing
+python test_text_query.py
+```
+
 
