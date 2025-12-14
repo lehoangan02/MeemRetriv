@@ -59,7 +59,7 @@ cd ..
 cd DataProcess
 python -m venv myenv
 source myenv/bin/activate (for MacOS and Linux)
-pip install -r requirements.txt
+pip install -r requirements.txt # requiremnts_cuda.txt if you have a CUDA-capable GPU (minimum 4GB VRAM)
 python mobileClipEmbedder.py --input_dir ./../DATA/archive/images/images --output_dir ./../DATA/embeddings
 python mobileClipEmbedder.py --input_dir ./../DATA/cleaned --output_dir ./../DATA/embeddings_cleaned
 deactivate
