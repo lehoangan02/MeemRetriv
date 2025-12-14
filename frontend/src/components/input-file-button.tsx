@@ -53,7 +53,10 @@ export default function InputFileButton({
           className="dropdown-content menu z-1 ml-1 min-w-56 rounded-box bg-primary px-1 py-2 text-primary-content shadow-xl"
         >
           <li>
-            <button className="inline-flex items-center gap-2 px-4 py-3 leading-none">
+            <button
+              className="inline-flex items-center gap-2 px-4 py-3 leading-none"
+              onClick={() => inputRef.current?.click()}
+            >
               <FolderOpenIcon className="size-4" />
               From Computer
             </button>

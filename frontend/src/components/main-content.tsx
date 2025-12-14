@@ -12,10 +12,8 @@ export default function MainContent({
 
   return (
     <main className={className} {...props}>
-      <div className="h-full flex-1">
-        {mode === "Text" && <TextRetrievalPanel />}
-        {mode === "Image" && <ImageRetrievalPanel />}
-      </div>
+      {mode === "Text" && <TextRetrievalPanel />}
+      {mode === "Image" && <ImageRetrievalPanel />}
     </main>
   );
 }
