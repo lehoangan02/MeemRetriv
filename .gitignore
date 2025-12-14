@@ -219,3 +219,7 @@ backend/vectordb/models/mobileclip_s0.pt
 *.onnx
 /DATA/celebrity_images_by_name
 /backend/vectordb/chroma/chroma_data
+/DATA/__MACOSX
+DATA/cleaned.zip\?download=true
+DATA/extracted_faces.zip\?download=true
+DATA/celebrity_images_by_name.zip\?download=true
