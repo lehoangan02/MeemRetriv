@@ -1,0 +1,155 @@
+Loading database configuration from .env file...
+Database "label_db" already exists.
+⏳ Waiting for Python models to load...
+🐍 Launching Python Server...
+INFO:     Started server process [270500]
+INFO:     Waiting for application startup.
+-----------------------------------------
+🚀 Initializing models...
+[INFO] 8-bit quantization loaded successfully on CUDA.
+Fetching 5 files: 100%|█████████████████████████| 5/5 [00:00<00:00, 57932.38it/s]
+✅ MemeLLMProcessor loaded.
+Initializing mobileclip_s0 on cuda...
+MobileCLIP (Model & Tokenizer) loaded successfully.
+✅ MobileCLIP Embedder loaded.
+-----------------------------------------
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     127.0.0.1:58754 - "GET /docs HTTP/1.1" 200 OK
+✅ Python Server is Ready!
+Schema already exists. Skipping creation.
+Label table already has data. Skipping import.
+Celeb table already has data. Skipping import.
+Class 'MemeImage' already exists. Skipping creation.
+Class 'MemeImageCleaned' already exists. Skipping creation.
+Class 'CelebFaceEmbeddings' already exists. Skipping creation.
+Class 'ExtractedFaceEmbeddings' already exists. Skipping creation.
+Checking numpy installation...
+INFO: Existing count for class 'MemeImage' is 6990
+INFO: Class 'MemeImage' already contains vectors. Skipping import.
+Checking numpy installation...
+INFO: Existing count for class 'MemeImageCleaned' is 6987
+INFO: Class 'MemeImageCleaned' already contains vectors. Skipping import.
+INFO: Existing count for class 'CelebFaceEmbeddings' is 18184
+INFO: Class 'CelebFaceEmbeddings' already contains data. Skipping import.
+INFO: Existing count for class 'ExtractedFaceEmbeddings' is 7720
+INFO: Class 'ExtractedFaceEmbeddings' already contains data. Skipping import.
+Index celebrities already exists. Skipping creation.
+Index captions already exists. Skipping creation.
+Index celebrities already has documents. Skipping import.
+Index captions already has documents. Skipping import.
+Collection 'face_vectors' already exists.
+INFO: Existing count for collection is 7720
+CHROMA INFO: Collection already contains data. Skipping import.
+2025-12-14T11:41:55.169+07:00  INFO 270355 --- [nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2025-12-14T11:41:55.169+07:00  INFO 270355 --- [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2025-12-14T11:41:55.170+07:00  INFO 270355 --- [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+Received text query: 
+A two-panel meme.
+Top panel: Bill Gates, with text saying “Perfectly healthy” and “Gives billions to cure disease.”
+Bottom panel: Steve Jobs speaking on a stage, with text saying “Keeps billions” and “Dies of cancer.”
+
+WARNING:  Unsupported upgrade request.
+Asking to truncate to max_length but no maximum length is provided and the model has no predefined maximum length. Default to no truncation.
+Time taken to predict person entities: 617.94 ms
+Time taken to extract caption and description: 12711.16 ms
+INFO:     127.0.0.1:34788 - "POST /analyze HTTP/1.1" 200 OK
+LLM Processing took: 13363 ms
+Time taken to search embeddings for Bill Gates: 41 ms
+Found 20 embeddings for celebrity: Bill Gates
+Time taken to search faces for all embeddings of Bill Gates: 248 ms
+Time taken to search embeddings for Steve Jobs: 3 ms
+Found 0 embeddings for celebrity: Steve Jobs
+Time taken to search faces for all embeddings of Steve Jobs: 0 ms
+Face Search took: 295 ms
+Caption Search took: 161 ms
+INFO:     127.0.0.1:39220 - "POST /embed_text HTTP/1.1" 200 OK
+Descriptive Text Search took: 396 ms
+Total retrieveSimilarImages execution time: 14216 ms
+Face Search Results:
+image_396
+image_3910
+image_3889
+image_6140
+image_6561
+image_361
+image_5890
+image_6848
+image_2116
+image_3069
+image_5111
+image_2739
+image_3928
+image_3294
+image_318
+image_1000
+image_3888
+image_5287
+image_126
+image_4869
+image_1968
+image_3896
+image_3315
+image_6268
+image_2731
+image_6632
+image_2812
+image_3012
+image_1771
+image_4246
+image_3908
+Caption Search Results:
+image_3889
+image_4648
+image_1098
+image_3934
+image_4188
+image_3908
+image_3886
+image_3924
+image_5168
+image_6455
+Descriptive Text Search Results:
+image_3910
+image_3889
+image_5167
+image_244
+image_2185
+image_6561
+image_6462
+image_361
+image_396
+image_3897
+image_3904
+image_3559
+image_4750
+image_81
+image_6924
+image_3710
+image_37
+image_5680
+image_5097
+image_6317
+Final Retrieved Images:
+image_3889
+image_3910
+image_396
+image_6561
+image_361
+image_3908
+image_5167
+image_244
+image_2185
+image_6462
+image_3897
+image_3904
+image_3559
+image_4648
+image_4750
+image_1098
+image_81
+image_6924
+image_6140
+image_3934
+Returning 20 images.
+

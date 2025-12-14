@@ -1,0 +1,85 @@
+Received text query: 
+A two-panel meme.
+Top panel: Bill Gates, with text saying “Perfectly healthy” and “Gives billions to cure disease.”
+Bottom panel: Steve Jobs speaking on a stage, with text saying “Keeps billions” and “Dies of cancer.”
+
+LLM Processing took: 11729 ms
+Time taken to search embeddings for Bill Gates: 55 ms
+Found 20 embeddings for celebrity: Bill Gates
+Time taken to search faces for all embeddings of Bill Gates: 74196 ms
+Time taken to search embeddings for Steve Jobs: 4 ms
+Found 0 embeddings for celebrity: Steve Jobs
+Time taken to search faces for all embeddings of Steve Jobs: 0 ms
+Face Search took: 74259 ms
+Caption Search took: 214 ms
+Descriptive Text Search took: 3543 ms
+Total retrieveSimilarImages execution time: 89746 ms
+Face Search Results:
+image_396
+image_6140
+image_3889
+image_6561
+image_3910
+image_5890
+image_361
+image_3069
+image_6848
+image_2116
+image_5287
+image_126
+image_5111
+image_3649
+Caption Search Results:
+image_3889
+image_4648
+image_1098
+image_3934
+image_4188
+image_3908
+image_3886
+image_3924
+image_5168
+image_6455
+Descriptive Text Search Results:
+image_3910
+image_3889
+image_5167
+image_244
+image_2185
+image_6561
+image_6462
+image_361
+image_396
+image_3897
+image_3904
+image_3559
+image_4750
+image_81
+image_6924
+image_3710
+image_37
+image_5680
+image_5097
+image_6317
+Final Retrieved Images:
+image_3889
+image_3910
+image_6561
+image_396
+image_361
+image_5167
+image_244
+image_2185
+image_6462
+image_3897
+image_3904
+image_3559
+image_4648
+image_6140
+image_4750
+image_1098
+image_81
+image_6924
+image_3934
+image_3710
+Returning 20 images.
