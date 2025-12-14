@@ -49,7 +49,8 @@ public class ConfigPostgresDatabase {
 
         System.out.println("Creating database \"" + dbName + "\"...");
 
-        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String url = "jdbc:postgresql://" + DatabaseConfig.getInstance().getPostgresServer() + ":" +
+        DatabaseConfig.getInstance().getPostgresPort() + "/postgres";
         String user = DatabaseConfig.getInstance().getPostgresUser();
         String password = DatabaseConfig.getInstance().getPostgresPassword();
 
@@ -77,7 +78,8 @@ public class ConfigPostgresDatabase {
             return;
         }
 
-        String url = DatabaseConfig.getInstance().getJdbcUrl();
+        String url = "jdbc:postgresql://" + DatabaseConfig.getInstance().getPostgresServer() + ":" +
+        DatabaseConfig.getInstance().getPostgresPort() + "/postgres";
         String user = DatabaseConfig.getInstance().getPostgresUser();
         String password = DatabaseConfig.getInstance().getPostgresPassword();
 
