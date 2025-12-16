@@ -90,6 +90,47 @@ public class WeviateExtractedFaceSearcher {
         }
         return results;
     }
+    public static List<MemeFaceRecord> searchFaceWithEmbeddingByThreshold(String[] vector, float threshold) {
+    if (vector == null || vector.length == 0) {
+        return new ArrayList<>();
+    }
+
+    String vectorJson = "[" + String.join(", ", vector) + "]";
+    return searchWeviateByThreshold(vectorJson, threshold);
+}
+
+private static List<MemeFaceRecord> searchWeviateByThreshold(String vectorStr, float threshold) {
+    List<MemeFaceRecord> results = new ArrayList<>();
+    try {
+        HttpClient client = HttpClient.newHttpClient();
+        String graphqlUrl = DatabaseConfig.getInstance().getWeviateUrl() + "/graphql";
+
+        String query = String.format(
+            "{ Get { %s ( nearVector: { vector: %s, certainty: %f } ) { imageName filePath } } }",
+            CLASS_NAME, vectorStr, threshold
+        );
+
+        String jsonPayload = "{\"query\": \"" + query.replace("\"", "\\\"") + "\"}";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(graphqlUrl))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonPayload))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+        if (response.statusCode() == 200) {
+            results = parseResponse(response.body());
+        } else {
+            System.err.println("Weaviate Error: " + response.statusCode());
+            System.err.println("Body: " + response.body());
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+    return results;
+}
 
     private static List<MemeFaceRecord> parseResponse(String jsonResponse) {
         List<MemeFaceRecord> records = new ArrayList<>();

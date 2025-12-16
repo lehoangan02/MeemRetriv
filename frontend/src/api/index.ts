@@ -21,9 +21,10 @@ export async function uploadImageBase64(req: Base64ImageRequest) {
 
 export async function searchByText(textQuery: string) {
   try {
+    console.log("API call - searchByText with query:", textQuery);
     const res = await axiosClient.post<Base64ImageResponse[]>(
       "/searchByText",
-      textQuery,
+      { text: textQuery },
       {
         headers: { "Content-Type": "text/plain" },
       },

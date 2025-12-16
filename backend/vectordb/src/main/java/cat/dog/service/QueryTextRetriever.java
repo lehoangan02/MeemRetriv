@@ -74,8 +74,8 @@ public class QueryTextRetriever {
 
         // weighted merging of results
         float faceWeight = 0.3f;
-        float captionWeight = 0.5f;
-        float textWeight = 0.2f;
+        float captionWeight = 0.4f;
+        float textWeight = 0.3f;
         Map<String, Float> finalImageScores = new HashMap<>();
         for (int i = 0; i < imageNamesFaceSearch.size(); i++) {
             String imageName = imageNamesFaceSearch.get(i);
@@ -167,8 +167,8 @@ public class QueryTextRetriever {
             for (CelebEmbedding embedding : celebEmbeddings) {
                 // System.out.println("Found embedding for: " + embedding.getCelebName() + " at " + embedding.getImagePath());
                 // search similar faces in weaviate using the embedding vector
-                // List<MemeFaceRecord> faces = WeviateExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
-                List<MemeFaceRecord> faces = ChromaExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
+                List<MemeFaceRecord> faces = WeviateExtractedFaceSearcher.searchFaceWithEmbeddingByThreshold(embedding.getEmbedding(), 0.97f);
+                // List<MemeFaceRecord> faces = ChromaExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
                 allFaces.add(faces);
             }
             long faceSearchEndTime = System.currentTimeMillis();

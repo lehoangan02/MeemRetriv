@@ -14,6 +14,7 @@ export async function retrieveService(params: RetrieveParams) {
   }
 
   if ("textQuery" in params) {
+    console.log("Searching by text:", params.textQuery);
     return searchByText(params.textQuery);
   }
 
