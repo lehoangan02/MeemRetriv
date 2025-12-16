@@ -63,60 +63,74 @@ class MemeLLMProcessor:
         self.ner_model = GLiNER_Person_Entity_Prediction()
 
     def process_query(self, query):
-        # NOTE: Since we are running in the same process now, 
-        # ensure ner.py isn't trying to spawn new processes unnecessarily
-
-        # Count time taken to predict person entities by the NER model
         import time
-        start_time = time.time()
-        celebrities = self.ner_model.predict_person_entities(query, threshold=0.5)
-        end_time = time.time()
-        print(f"Time taken to predict person entities: {(end_time - start_time) * 1000:.2f} ms")
-        if celebrities:
-            celebrities_text = ", ".join(celebrities)  # joins all names with comma
-        else:
-            celebrities_text = "unknown"
-
-        # Count time taken to extract caption from the query by the LLM
-        start_time = time.time()
-
-        # Extract caption if present in quotes
         import re
+        import json
+
+        # 1. NER Prediction
+        start_time = time.time()
+        
+        # Initialize variables to ensure safety
+        celebrities = []
+        helper_prompt = ""
+        
+        try:
+            # Get the mapping string (helper_prompt) and the list
+            celebrities, helper_prompt = self.ner_model.predict_person_entities(query, threshold=0.5)
+            print("NER PROMPT: ", helper_prompt)
+        except Exception as e:
+            print(f"[WARNING] NER failed: {e}")
+        
+        print(f"NER Time: {(time.time() - start_time) * 1000:.2f} ms")
+
+        # 2. Regex Caption Extraction
         caption_match = re.search(r'"(.*?)"', query)
-        caption_text = caption_match.group(1) if caption_match else ""
+        hint_caption = caption_match.group(1) if caption_match else "None detected"
 
-        system_prompt = f"""
-        You are a data processing assistant for a meme retrieval system.
-        Your job is to split the user query into three fields:
+        # 3. LLM Extraction
+        start_time = time.time()
 
-        - "celebrities": list of detected celebrity names
-        - "caption": the meme caption text
-        - "text": a generic visual description of the meme
+        # --- CHANGE 1: STATIC SYSTEM PROMPT ---
+        system_prompt = """
+        You are a smart database assistant. Your goal is to extract structured JSON data from a meme description.
+        
+        OUTPUT FORMAT:
+        {
+            "celebrities": ["List", "of", "Real", "Actor/Celebrity", "Names"],
+            "caption": "Exact text found inside quotes",
+            "text": "Visual description of the scene (exclude caption)"
+        }
 
-        CAPTION VS DESCRIPTION RULES:
-        1. If the user includes text inside quotation marks → that exact text is the caption.
-        2. If there are no quotes:
-        - If the sentence describes a visual scene (contains words like: meme, man, woman, guy, people, image, photo, picture, holding, standing, pointing, sitting, smirking, looking) → treat it as visual description, not caption.
-        - If the sentence reads like commentary, a joke, a statement, or typical meme text → treat the entire input as the caption.
-        3. If the query explicitly includes both a description and a caption (e.g., "caption:" or "the caption reads") → separate them accordingly.
-        4. Never rewrite or modify the caption. Always keep caption text exactly as the user wrote it.
-        5. Never invent a caption or description. Only separate what the user gave.
+        RULES:
+        1. "celebrities": LOOK AT THE PROVIDED CONTEXT. If the user mentions a character (e.g., "Sansa Stark"), use the CONTEXT to find the actor (e.g., "Sophie Turner").
+        2. "caption": Only text inside quotation marks.
+        3. "text": Describe the visual scene. Replace specific names with generic terms like "a man", "a woman", "a person".
+        """
 
-        GENERATION RULES:
-        - "celebrities": use detected names if any
-        - "caption": determined using the rules above
-        - "text": rewrite only the visual description generically.  
-        Replace each detected celebrity with "a person" while preserving the number and order.
-        - Return ONLY valid JSON without explanations.
+        # --- CHANGE 2: INJECT CONTEXT INTO USER MESSAGE ---
+        # We explicitly put the helper prompt right next to the query so the 1.5B model can't miss it.
+        user_payload = f"""
+        ### CONTEXT / KNOWLEDGE BASE:
+        {helper_prompt}
 
-        Detected celebrities: {celebrities_text}
-        Input: {query}
+        ### HINTS:
+        Text detected in quotes: "{hint_caption}"
+
+        ### USER INPUT:
+        {query}
+
+        Based on the Context and User Input above, generate the JSON:
         """
 
         messages = [
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": query}
+            {"role": "user", "content": user_payload}
         ]
+
+        # Debug: Print exactly what goes into the model
+        # print("--- DEBUG PROMPT ---")
+        # print(user_payload)
+        # print("--------------------")
 
         text = self.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         model_inputs = self.tokenizer([text], return_tensors="pt").to(self.device)
@@ -124,7 +138,8 @@ class MemeLLMProcessor:
         generated_ids = self.model.generate(
             **model_inputs,
             max_new_tokens=256,
-            temperature=0.1
+            temperature=0.1, 
+            do_sample=False
         )
 
         generated_ids = [
@@ -133,9 +148,17 @@ class MemeLLMProcessor:
 
         response = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-        end_time = time.time()
-        print(f"Time taken to extract caption and description: {(end_time - start_time) * 1000:.2f} ms")
+        print(f"LLM Time: {(time.time() - start_time) * 1000:.2f} ms")
         
+        # Cleanup JSON
+        try:
+            json_start = response.find('{')
+            json_end = response.rfind('}') + 1
+            if json_start != -1 and json_end != -1:
+                response = response[json_start:json_end]
+        except:
+            pass
+
         return response
 
 if __name__ == "__main__":
@@ -157,4 +180,5 @@ if __name__ == "__main__":
     else:
         query = "PERFECTLY HEALTHY GIVES BILLIONS TO CURE DISEASE KEEPS BILLIONS DIES OF CANCER"
     result = processor.process_query(query)
+    print("asdfasf")
     print(result)

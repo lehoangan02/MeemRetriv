@@ -42,12 +42,18 @@ public class LLMQueryProcessor {
             // 3. Send Request
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
+            // print everything in the response for debugging
+            System.out.println("Response Status Code: " + response.statusCode());
+            System.out.println("Response Headers: " + response.headers());
+            System.out.println("Response Body: " + response.body());
+
             if (response.statusCode() != 200) {
                 throw new RuntimeException("Server returned error: " + response.body());
             }
 
             // 4. Parse Response
             // The Python server now returns clean JSON, so we just map it.
+
             return objectMapper.readValue(response.body(), Map.class);
 
         } catch (Exception e) {

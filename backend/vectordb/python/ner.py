@@ -10,6 +10,7 @@ os.environ["USE_TF"] = "0"
 multiprocessing.set_start_method("spawn", force=True)
 
 from gliner import GLiNER
+from actor import CharacterActorResolver
 
 class GLiNER_Person_Entity_Prediction:
     def __init__(self):
@@ -32,9 +33,32 @@ class GLiNER_Person_Entity_Prediction:
             for entity in entities 
             if entity["label"] == "celebrity"
         ]
-        
-        # print("Predicted Entities (Raw):", entities)
-        return celebrities
+        character_names = [
+            entity["text"] 
+            for entity in entities 
+            if entity["label"] in ["person", "man", "woman"]
+        ]
+        # save the character names to a file for debugging
+        with open("character_names.txt", "w") as f:
+            for name in character_names:
+                f.write(name + "\n")
+        # replace character names with celebrities if they exist
+        resolver_res = []
+        resolver = CharacterActorResolver()
+        for name in character_names:
+            actor = resolver.resolve(name)
+            if actor:
+                resolver_res.append(actor)
+        # create a prompt that includes both celebrities and resolved actors
+        prompt = "These are the celebrities correseponding to the characters: "
+        for i, actor in enumerate(resolver_res):
+            if actor is not None:
+                prompt += f"{actor} is the celebrity/actor for {character_names[i]}. "
+        # save the prompt to a file for debugging
+        with open("resolved_prompt.txt", "w") as f:
+            f.write(prompt)
+
+        return celebrities, prompt
 
 if __name__ == "__main__":
     model = GLiNER_Person_Entity_Prediction()
