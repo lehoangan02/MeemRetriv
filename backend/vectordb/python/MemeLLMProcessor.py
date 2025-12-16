@@ -104,7 +104,7 @@ class MemeLLMProcessor:
         {
             "celebrities": ["Elon Musk"],
             "caption": "To the moon",
-            "text": "A man smoking a joint."
+            "text": "A person smoking a joint."
         }
 
         ### GUIDELINES:
@@ -115,7 +115,7 @@ class MemeLLMProcessor:
            - Join multiple captions with " | ".
         3. "text" (Visual Description): 
            - Describe the visual action.
-           - CRITICAL: REPLACE ALL NAMES (Celebrities/Characters) with generic terms like "a man", "a woman", "a person".
+           - CRITICAL: REPLACE ALL NAMES (Celebrities/Characters) with generic terms like "a person".
            - The "text" field must NOT contain proper names.
         """
 
@@ -135,7 +135,7 @@ class MemeLLMProcessor:
         {query}
 
         ### INSTRUCTION:
-        Generate the JSON. Remember to replace names in the "text" field with "a man" or "a person".
+        Generate the JSON. Remember to replace names in the "text" field with "a person".
         """
 
         messages = [
@@ -185,8 +185,34 @@ class MemeLLMProcessor:
         # response_json = json.loads(response)
         # response_json["text"] = cleaned_text
         # response = json.dumps(response_json)
+
+        print("Maps of character names to actors:", name_to_actor)
         
+        response = self.__replace_celebrities_with_actors(response, name_to_actor)
         return response
+
+
+    def __replace_celebrities_with_actors(self, response, name_to_actor):
+        import json
+
+        try:
+            data = json.loads(response)
+        except:
+            return response
+
+        celebrities = data.get("celebrities", [])
+        if not celebrities or not name_to_actor:
+            return response
+
+        data["celebrities"] = [
+            name_to_actor.get(name, name)
+            for name in celebrities
+        ]
+
+        return json.dumps(data, ensure_ascii=False)
+
+
+    
     def __replace_names_in_text(self, text, names):
         print("Names to replace:", names)
         if not names:
