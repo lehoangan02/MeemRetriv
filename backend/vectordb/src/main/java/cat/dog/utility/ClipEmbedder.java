@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
@@ -11,6 +12,9 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.util.stream.Collectors;
 
 /**
  * Service responsible for generating MobileCLIP embeddings for images and text.
@@ -60,9 +64,9 @@ public class ClipEmbedder {
     public static String embedText(String textQuery, String saveNpyPath) {
         if (textQuery == null || textQuery.isEmpty()) return null;
 
-        // Escape text for JSON
-        String safeText = textQuery.replace("\\", "\\\\").replace("\"", "\\\"");
-        String jsonPayload = "{\"text\": \"" + safeText + "\"}";
+        JsonObject obj = new JsonObject();
+        obj.addProperty("text", textQuery);
+        String jsonPayload = obj.toString();
 
         String vectorJson = sendRequest(ENDPOINT_TEXT, jsonPayload);
 
@@ -72,6 +76,8 @@ public class ClipEmbedder {
 
         return vectorJson;
     }
+
+
 
     /**
      * Overload for image embedding without saving to file.
@@ -137,55 +143,39 @@ public class ClipEmbedder {
             URL url = new URL(endpoint);
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("Content-Type", "application/json; utf-8");
+            conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
             conn.setRequestProperty("Accept", "application/json");
             conn.setDoOutput(true);
 
-            // Write Request
             try (OutputStream os = conn.getOutputStream()) {
-                byte[] input = jsonPayload.getBytes(StandardCharsets.UTF_8);
-                os.write(input, 0, input.length);
+                os.write(jsonPayload.getBytes(StandardCharsets.UTF_8));
             }
 
-            // Check Status
             int code = conn.getResponseCode();
+            InputStream stream = (code == 200)
+                    ? conn.getInputStream()
+                    : conn.getErrorStream();
+
+            String resp = new BufferedReader(
+                    new InputStreamReader(stream, StandardCharsets.UTF_8)
+            ).lines().collect(Collectors.joining());
+
             if (code != 200) {
-                System.err.println("ClipEmbedder Server Error [" + code + "] on " + endpoint);
+                System.err.println("ClipEmbedder error [" + code + "]: " + resp);
                 return null;
             }
 
-            // Read Response
-            StringBuilder response = new StringBuilder();
-            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                String responseLine;
-                while ((responseLine = br.readLine()) != null) {
-                    response.append(responseLine.trim());
-                }
-            }
-
-            // Parse JSON response manually to extract just the embedding array
-            // Expected format: {"embedding": [0.1, 0.2, ...]}
-            String respStr = response.toString();
-            int startIndex = respStr.indexOf("[");
-            int endIndex = respStr.lastIndexOf("]");
-            
-            if (startIndex != -1 && endIndex != -1) {
-                // Return just the list part to match previous interface behavior
-                return respStr.substring(startIndex, endIndex + 1);
-            }
-
-            return null;
+            JsonObject json = JsonParser.parseString(resp).getAsJsonObject();
+            return json.getAsJsonArray("embedding").toString();
 
         } catch (Exception e) {
-            System.err.println("ClipEmbedder Connection Failure: " + e.getMessage());
-            System.err.println("Ensure the FastAPI server is running on " + API_BASE_URL);
+            System.err.println("ClipEmbedder failure: " + e.getMessage());
             return null;
         } finally {
-            if (conn != null) {
-                conn.disconnect();
-            }
+            if (conn != null) conn.disconnect();
         }
     }
+
 
     /**
      * Saves the vector JSON string to a file.

@@ -74,8 +74,8 @@ public class QueryTextRetriever {
 
         // weighted merging of results
         float faceWeight = 0.3f;
-        float captionWeight = 0.3f;
-        float textWeight = 0.4f;
+        float captionWeight = 0.5f;
+        float textWeight = 0.2f;
         Map<String, Float> finalImageScores = new HashMap<>();
         for (int i = 0; i < imageNamesFaceSearch.size(); i++) {
             String imageName = imageNamesFaceSearch.get(i);
