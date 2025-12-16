@@ -45,10 +45,10 @@ class CharacterActorResolver:
         qid = self._get_character_qid(character_name)
         if not qid:
             return None
-        actor = self._get_actor_from_qid(qid)[0]
-        if not actor:
+        actors = self._get_actor_from_qid(qid)
+        if not actors:
             return None
-        return actor
+        return actors[0]
 
 if __name__ == "__main__":
     resolver = CharacterActorResolver()

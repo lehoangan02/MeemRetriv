@@ -1,6 +1,7 @@
 import sys
 import os
 import multiprocessing
+import re
 
 # --- CRITICAL: These must be set BEFORE importing torch or transformers ---
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -76,8 +77,10 @@ class MemeLLMProcessor:
         
         try:
             # Get the mapping string (helper_prompt) and the list
-            celebrities, helper_prompt = self.ner_model.predict_person_entities(query, threshold=0.5)
+            celebrities, helper_prompt, character_names, name_to_actor = self.ner_model.predict_person_entities(query, threshold=0.5)
+            celebrities = celebrities + character_names
             print("NER PROMPT: ", helper_prompt)
+            print("CELEBRITIES: ", celebrities)
         except Exception as e:
             print(f"[WARNING] NER failed: {e}")
         
@@ -92,19 +95,28 @@ class MemeLLMProcessor:
 
         # --- CHANGE 1: STATIC SYSTEM PROMPT ---
         system_prompt = """
-        You are a smart database assistant. Your goal is to extract structured JSON data from a meme description.
-        
-        OUTPUT FORMAT:
+        You are a smart database assistant. Extract structured JSON from the meme description.
+
+        ### ONE-SHOT EXAMPLE (STRICTLY FOLLOW THIS PATTERN):
+        User Input: "Elon Musk smoking a joint. Text says 'To the moon'."
+        Context Celebrities: ["Elon Musk"]
+        Output JSON:
         {
-            "celebrities": ["List", "of", "Real", "Actor/Celebrity", "Names"],
-            "caption": "Exact text found inside quotes",
-            "text": "Visual description of the scene (exclude caption)"
+            "celebrities": ["Elon Musk"],
+            "caption": "To the moon",
+            "text": "A man smoking a joint."
         }
 
-        RULES:
-        1. "celebrities": LOOK AT THE PROVIDED CONTEXT. If the user mentions a character (e.g., "Sansa Stark"), use the CONTEXT to find the actor (e.g., "Sophie Turner").
-        2. "caption": Only text inside quotation marks.
-        3. "text": Describe the visual scene. Replace specific names with generic terms like "a man", "a woman", "a person".
+        ### GUIDELINES:
+        1. "celebrities": Output the list of real names provided in the context.
+        2. "caption": 
+           - Extract text found inside quotes.
+           - Extract text explicitly described as "saying", "reads", or "text on image".
+           - Join multiple captions with " | ".
+        3. "text" (Visual Description): 
+           - Describe the visual action.
+           - CRITICAL: REPLACE ALL NAMES (Celebrities/Characters) with generic terms like "a man", "a woman", "a person".
+           - The "text" field must NOT contain proper names.
         """
 
         # --- CHANGE 2: INJECT CONTEXT INTO USER MESSAGE ---
@@ -116,10 +128,14 @@ class MemeLLMProcessor:
         ### HINTS:
         Text detected in quotes: "{hint_caption}"
 
+        ### CELEBRITIES (Use these for the 'celebrities' list):
+        {', '.join(celebrities) if celebrities else 'None detected'}
+
         ### USER INPUT:
         {query}
 
-        Based on the Context and User Input above, generate the JSON:
+        ### INSTRUCTION:
+        Generate the JSON. Remember to replace names in the "text" field with "a man" or "a person".
         """
 
         messages = [
@@ -158,8 +174,25 @@ class MemeLLMProcessor:
                 response = response[json_start:json_end]
         except:
             pass
-
+        # final process to replace all character names with "a person" in the "text" field
+        # # get the descriptive text from the response
+        # text = json.loads(response).get("text", "")
+        # # replace names in the text
+        # names_to_replace = character_names + celebrities
+        
+        # cleaned_text = self.__replace_names_in_text(text, names_to_replace)
+        # # reconstruct the response JSON
+        # response_json = json.loads(response)
+        # response_json["text"] = cleaned_text
+        # response = json.dumps(response_json)
+        
         return response
+    def __replace_names_in_text(self, text, names):
+        print("Names to replace:", names)
+        if not names:
+            return text
+        pattern = re.compile(r"\b(" + "|".join(re.escape(n) for n in names) + r")\b", re.IGNORECASE)
+        return pattern.sub("a person", text)
 
 if __name__ == "__main__":
     processor = MemeLLMProcessor()
@@ -178,7 +211,14 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         query = sys.argv[1]
     else:
-        query = "PERFECTLY HEALTHY GIVES BILLIONS TO CURE DISEASE KEEPS BILLIONS DIES OF CANCER"
+        query = """Top panel: Bill Gates, with text saying “Perfectly healthy” and “Gives billions to cure disease.”
+        Bottom panel: Steve Jobs speaking on a stage, with text saying “Keeps billions” and “Dies of cancer.”
+        """
+        query = """
+        A two-panel meme featuring characters from Game of Thrones.
+        Top panel: Sansa Stark looking serious, with text saying "Only a fool would trust Littlefinger."
+        Bottom panel: Ned Stark and Catelyn Stark standing together, smiling broadly and looking at each other.
+        """
     result = processor.process_query(query)
     print("asdfasf")
     print(result)
