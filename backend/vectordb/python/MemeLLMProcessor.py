@@ -26,9 +26,9 @@ class MemeLLMProcessor:
         if torch.backends.mps.is_available() and torch.backends.mps.is_built():
             self.device = "mps"
             self.dtype = torch.float16
-        elif torch.cuda.is_available():
-            self.device = "cuda"
-            self.dtype = torch.float16
+        # elif torch.cuda.is_available():
+        #     self.device = "cuda"
+        #     self.dtype = torch.float16
         else:
             self.device = "cpu"
             self.dtype = torch.float32
