@@ -56,7 +56,7 @@ export default function TextRetrievalPanel() {
 
             <div className="relative flex w-full flex-col overflow-hidden rounded-lg bg-base-300 ring-1 ring-black/10 drop-shadow-xl transition-all focus-within:ring-primary/50 dark:ring-white/10">
               <textarea
-                name="prompt"
+                name="search_prompt"
                 ref={textareaRef}
                 onChange={handleInput}
                 onKeyDown={(e) => {
@@ -72,9 +72,12 @@ export default function TextRetrievalPanel() {
                   "text-base leading-normal text-base-content placeholder:text-base-content/30",
                 )}
                 placeholder="e.g., 'That cat nodding its head to music' or 'Coding error panic'..."
+                autoComplete="off"
+                spellCheck="false"
+                data-
               />
 
-              <div className="flex items-center justify-between border-t border-base-content/5 bg-base-300/50 px-4 py-3 backdrop-blur-sm">
+              <div className="flex items-center justify-between border-t border-base-content/5 bg-base-300/50 px-4 py-3">
                 <div className="flex items-center gap-2 text-xs font-medium text-base-content/70">
                   <BotIcon className="size-4 text-secondary" />
                   <span>AI-Powered Search</span>
@@ -83,9 +86,7 @@ export default function TextRetrievalPanel() {
                 <button
                   onClick={handleSearch}
                   disabled={isPending}
-                  className={
-                    "btn items-center gap-1 leading-tight text-primary-content transition-all btn-sm btn-primary"
-                  }
+                  className="btn items-center gap-1 leading-tight text-primary-content transition-all btn-sm btn-primary"
                 >
                   <span>Search</span>
                   <SendHorizonalIcon className="size-4" />
