@@ -53,6 +53,11 @@ public class QueryTextRetriever {
         String text = (String) processedResult.get("text");
         List<String> imageNamesDescriptiveTextSearch = MemeSearcher.searchByText(text, "MemeImageCleaned", null);
         end = System.currentTimeMillis();
+
+        start = System.currentTimeMillis();
+        List<String> fallbackDescriptiveTextSearch = MemeSearcher.searchByText(textQuery, "MemeImage", null);
+        end = System.currentTimeMillis();
+        // combine both descriptive text search results
         System.out.println("Descriptive Text Search took: " + (end - start) + " ms");
 
         long totalEnd = System.currentTimeMillis();
@@ -71,11 +76,26 @@ public class QueryTextRetriever {
         for (String imageName : imageNamesDescriptiveTextSearch) {
             System.out.println(imageName);
         }
+        System.out.println("Fallback Descriptive Text Search Results:");
+        for (String imageName : fallbackDescriptiveTextSearch) {
+            System.out.println(imageName);
+        }
+
+        // if the text from processedResult is empty or contains only "a person", clear the descriptive text search results
+        if (text == null || text.trim().isEmpty() || text.trim().equalsIgnoreCase("a person")) {
+            imageNamesDescriptiveTextSearch.clear();
+        }
+        // if the caption from processedResult is empty or contains only "a person", clear the caption search results
+        String caption = (String) processedResult.get("caption");
+        if (caption == null || caption.trim().isEmpty() || caption.trim().equalsIgnoreCase("a person")) {
+            imageNamesMemeCaptionSearch.clear();
+        }
 
         // weighted merging of results
-        float faceWeight = 0.3f;
-        float captionWeight = 0.4f;
-        float textWeight = 0.3f;
+        float faceWeight = 0.2f;
+        float captionWeight = 0.3f;
+        float textWeight = 0.1f;
+        float fallbackTextWeight = 0.2f;
         Map<String, Float> finalImageScores = new HashMap<>();
         for (int i = 0; i < imageNamesFaceSearch.size(); i++) {
             String imageName = imageNamesFaceSearch.get(i);
@@ -103,6 +123,17 @@ public class QueryTextRetriever {
             String imageName = imageNamesDescriptiveTextSearch.get(i);
             float k = 30.0f;
             float score = textWeight * (1.0f / (k + i + 1));
+            boolean exists = finalImageScores.containsKey(imageName);
+            if (!exists) {
+                finalImageScores.put(imageName, 0.0f);
+            }
+            float accumulatedScore = finalImageScores.get(imageName) + score;
+            finalImageScores.put(imageName, accumulatedScore);
+        }
+        for (int i = 0; i < fallbackDescriptiveTextSearch.size(); i++) {
+            String imageName = fallbackDescriptiveTextSearch.get(i);
+            float k = 60.0f; // use a larger k to reduce the impact of fallback search
+            float score = fallbackTextWeight * (1.0f / (k + i + 1));
             boolean exists = finalImageScores.containsKey(imageName);
             if (!exists) {
                 finalImageScores.put(imageName, 0.0f);
@@ -167,7 +198,7 @@ public class QueryTextRetriever {
             for (CelebEmbedding embedding : celebEmbeddings) {
                 // System.out.println("Found embedding for: " + embedding.getCelebName() + " at " + embedding.getImagePath());
                 // search similar faces in weaviate using the embedding vector
-                List<MemeFaceRecord> faces = WeviateExtractedFaceSearcher.searchFaceWithEmbeddingByThreshold(embedding.getEmbedding(), 0.97f);
+                List<MemeFaceRecord> faces = WeviateExtractedFaceSearcher.searchFaceWithEmbeddingByThreshold(embedding.getEmbedding(), 0.92f);
                 // List<MemeFaceRecord> faces = ChromaExtractedFaceSearcher.searchFaceWithEmbedding(embedding.getEmbedding(), 10);
                 allFaces.add(faces);
             }

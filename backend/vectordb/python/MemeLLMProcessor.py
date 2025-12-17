@@ -117,6 +117,8 @@ class MemeLLMProcessor:
            - Describe the visual action.
            - CRITICAL: REPLACE ALL NAMES (Celebrities/Characters) with generic terms like "a person".
            - The "text" field must NOT contain proper names.
+        4. If no celebrities or caption text is detected, use empty lists or "None detected" as appropriate.
+        5. If the input is ambiguous, copy the input query into the "text" field.
         """
 
         # --- CHANGE 2: INJECT CONTEXT INTO USER MESSAGE ---
