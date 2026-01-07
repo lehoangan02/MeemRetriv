@@ -105,9 +105,9 @@ export default function TextRetrievalPanel() {
               "Awkward silence",
               "Reaction images",
               "Stupid Cat",
-              "Fuck Dog",
+              "Corn Dog",
               "Yellow Cat",
-              "Trần Dần + Súng",
+              "Six + Seven",
             ].map((tag) => (
               <button
                 key={tag}
