@@ -124,4 +124,7 @@ cd frontend/testing
 python test_text_query.py
 ```
 
+## DEMO VIDEO
+https://www.youtube.com/watch?v=hn5t1ve4AR4
+
 
